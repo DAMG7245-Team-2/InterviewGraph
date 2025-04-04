@@ -1,4 +1,4 @@
-##InterviewGraph: Interview Prep Multi-Agent System
+## InterviewGraph: Interview Prep Multi-Agent System
 
 Interview preparation process is very intimidating and daunting, particularly for candidates who are aiming for roles in highly competitive companies like big tech (MAANG). This project aims to streamline and personalize the whole process of interview preparation using advanced AI tools, with a focus on deep research, contextual relevance and realistic mock interview simulation.
 
