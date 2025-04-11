@@ -6,12 +6,17 @@ perform data preprocessing, and load it into a Snowflake database table.
 
 import os
 import sys
+import logging
 
 from dotenv import load_dotenv
 import pandas as pd
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 def load_environment_variables():
     """
@@ -29,8 +34,8 @@ def load_environment_variables():
     
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     if missing_vars:
-        print(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
-        print("Please check your .env file or environment settings.")
+        logging.error(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
+        logging.debug("Please check your .env file or environment settings.")
         sys.exit(1)
 
 
@@ -55,7 +60,7 @@ def load_and_preprocess_data(file_path):
         df = df.reset_index(drop=True)
         return df
     except Exception as e:
-        print(f"Error loading or preprocessing data: {e}")
+        logging.error(f"Error loading or preprocessing data: {e}")
         sys.exit(1)
 
 
@@ -76,10 +81,10 @@ def connect_to_snowflake():
             schema=os.getenv("SNOWFLAKE_SCHEMA")
         )
         cursor = conn.cursor()
-        print("Connection established successfully.")
+        logging.info("Connection established successfully.")
         return conn, cursor
     except snowflake.connector.errors.Error as e:
-        print(f"Error connecting to Snowflake: {e}")
+        logging.error(f"Error connecting to Snowflake: {e}")
         return None, None
 
 
@@ -99,10 +104,10 @@ def upload_data_to_snowflake(conn, df, table_name):
         success, nchunks, nrows, _ = write_pandas(
             conn, df, table_name, auto_create_table=True
         )
-        print(f"Uploaded {nrows} rows in {nchunks} chunks")
+        logging.info(f"Uploaded {nrows} rows in {nchunks} chunks")
         return success
     except Exception as e:
-        print(f"Error uploading data to Snowflake: {e}")
+        logging.error(f"Error uploading data to Snowflake: {e}")
         return False
 
 
@@ -118,7 +123,7 @@ def close_connection(conn, cursor):
         cursor.close()
     if conn:
         conn.close()
-    print("Connection closed.")
+    logging.info("Connection closed.")
 
 
 def main():
