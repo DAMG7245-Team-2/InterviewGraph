@@ -1,0 +1,23 @@
+[project]
+name = "interviewgraph"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Neha Devarapalli",email = "devarapalli.n@northeastern.edu"}
+]
+readme = "README.md"
+requires-python = ">=3.12, <4.0"
+dependencies = [
+    "pandas (>=2.2.3,<3.0.0)",
+    "fsspec (>=2025.3.2,<2026.0.0)",
+    "huggingface-hub (>=0.30.2,<0.31.0)",
+    "snowflake-connector-python[pandas] (>=3.14.0,<4.0.0)",
+    "python-dotenv (>=1.1.0,<2.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
