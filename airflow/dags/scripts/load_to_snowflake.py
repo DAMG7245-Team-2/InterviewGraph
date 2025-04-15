@@ -16,6 +16,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def ensure_database_and_schema_exist(conn, database, schema):
+    """
+    Ensures that the specified database and schema exist in Snowflake.
+    If they don't, creates them.
+    """
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f"CREATE DATABASE IF NOT EXISTS {database}")
+            cur.execute(f"USE DATABASE {database}")
+            cur.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
+        logger.info(f"Database '{database}' and schema '{schema}' created/verified.")
+    except snowflake.connector.errors.Error as e:
+        logger.exception(f"Error creating/verifying database and schema: {e}")
+        sys.exit(1)
+
 def load_to_snowflake(file_path: str = "./tmp_data/cleaned_data.csv", table_name: str = "INTERVIEW_QUESTIONS"):
     logger.info(f"Starting Snowflake data load process for file: {file_path}")
 
@@ -58,15 +73,21 @@ def load_to_snowflake(file_path: str = "./tmp_data/cleaned_data.csv", table_name
             schema=os.getenv("SNOWFLAKE_SCHEMA")
         )
         logger.info("Connection to Snowflake established.")
+        # Ensure the database and schema exist
+        ensure_database_and_schema_exist(conn, os.getenv("SNOWFLAKE_DATABASE"), os.getenv("SNOWFLAKE_SCHEMA"))
     except snowflake.connector.errors.Error as e:
         logger.exception(f"Failed to connect to Snowflake: {e}")
         sys.exit(1)
 
     # Upload the DataFrame
     try:
-        with conn.cursor() as cursor:
+        with conn.cursor():
             success, nchunks, nrows, _ = write_pandas(
-                conn, df, table_name, auto_create_table=True
+                conn, 
+                df, 
+                table_name, 
+                auto_create_table=True, 
+                overwrite=True
             )
             if success:
                 logger.info(f"Successfully uploaded {nrows} rows in {nchunks} chunks to '{table_name}'.")
