@@ -24,7 +24,7 @@ def download_kaggle_dataset(dataset_name = "syedmharis/software-engineering-inte
         str: Path to the saved CSV file
     """   
     os.environ['KAGGLE_CONFIG_DIR'] = '/opt/airflow/config' 
-    logger.info(f"Authernticating with Kaggle API using config at {os.environ['KAGGLE_CONFIG_DIR']}")
+    logger.info(f"Authenticating with Kaggle API using config at {os.environ['KAGGLE_CONFIG_DIR']}")
     kaggle.api.authenticate()
 
     logger.info(f"Downloading Kaggle dataset '{dataset_name}' to '{output_path}'")
