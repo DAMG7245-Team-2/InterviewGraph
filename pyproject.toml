@@ -3,7 +3,8 @@ name = "interviewgraph"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Ashish Nevan",email = "nevchris242@gmail.com"}
+    {name = "Ashish Nevan",email = "nevchris242@gmail.com"},
+    {name = "Neha Devarapalli",email = "devarapalli.n@northeastern.edu"}
 ]
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
