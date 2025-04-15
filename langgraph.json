@@ -1,0 +1,8 @@
+{
+  "dependencies": ["./backend/interview_agent", "./backend/prep_agent"],
+  "graphs": {
+    "interview_agent": "./backend/interview_agent/src/inteview_agent/graph.py:graph",
+    "prep_agent": "./backend/prep_agent/src/prep_agent/graph.py:graph"
+  },
+  "env": "./.env"
+}
