@@ -1,7 +1,6 @@
 from datetime import datetime
 import os
 import shutil
-import sys
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -13,12 +12,7 @@ from scripts.download_kaggle import download_kaggle_dataset
 from scripts.load_to_snowflake import load_to_snowflake
 from scripts.merge_datasets import merge_datasets
 from scripts.transform_hf_data import transform_hf_data
-from scripts.transform_kaggle_data import transform_kaggle_data
-
-# Add base directory to Python path for importing scripts
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-
+from scripts.transform_kaggle_data import transform_kaggle_data 
 
 default_args = {
     'owner': 'airflow',
