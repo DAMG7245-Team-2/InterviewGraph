@@ -1,11 +1,9 @@
 """Define the state structures for the agent."""
 
 from __future__ import annotations
-from typing import Dict, List, Literal, TypedDict, Annotated
+from typing import List, Literal, TypedDict, Annotated
 from pydantic import BaseModel, Field
 import operator
-from pinecone.data.index_asyncio import _IndexAsyncio
-from langchain_huggingface import HuggingFaceEmbeddings
 
 
 class Section(BaseModel):
