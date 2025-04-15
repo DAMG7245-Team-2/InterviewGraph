@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import Any, Dict, Literal
+from typing import Literal
 
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
@@ -237,7 +237,7 @@ async def search_web(state: SectionState, config: RunnableConfig):
         score_threshold,
     )
 
-    source_str = source_str + pinecone_search_str
+    source_str = pinecone_search_str + "\n\n" + source_str
 
     return {
         "source_str": source_str,
@@ -494,10 +494,9 @@ graph = report_workflow.compile()
 
 
 async def main():
-
     sample_jd = """Full job description
 Minimum qualifications:
-Bachelor’s degree or equivalent practical experience.
+Bachelor's degree or equivalent practical experience.
 2 years of experience with software development in one or more programming languages, or 1 year of experience with an advanced degree.
 2 years of experience with data structures or algorithms in an academic or industry setting.
 2 years of experience with backend or fullstack software development.
@@ -520,7 +519,6 @@ Manage person's project priorities, deadlines, and deliverables."""
 
 
 if __name__ == "__main__":
-
     load_dotenv()
 
     # with open("./graph.md", "w") as f:

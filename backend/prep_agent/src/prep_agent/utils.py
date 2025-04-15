@@ -1,7 +1,5 @@
 import asyncio
-import os
 from dotenv import load_dotenv
-from pinecone import Pinecone
 from pinecone.data.index_asyncio import _IndexAsyncio
 from tavily import AsyncTavilyClient
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -34,9 +32,9 @@ def unique_formatted_sources(search_results, max_tokens_per_source: int = 4000) 
     unique_url_sources = {source["url"]: source for source in sources}
     formatted_text = "Content from sources:\n"
     for i, source in enumerate(unique_url_sources.values(), 1):
-        formatted_text += f"{'='*80}\n"  # Clear section separator
+        formatted_text += f"{'=' * 80}\n"  # Clear section separator
         formatted_text += f"Source: {source['title']}\n"
-        formatted_text += f"{'-'*80}\n"  # Subsection separator
+        formatted_text += f"{'-' * 80}\n"  # Subsection separator
         formatted_text += f"URL: {source['url']}\n===\n"
         formatted_text += (
             f"Most relevant content from source: {source['content']}\n===\n"
@@ -51,7 +49,7 @@ def unique_formatted_sources(search_results, max_tokens_per_source: int = 4000) 
         if len(raw_content) > char_limit:
             raw_content = raw_content[:char_limit] + "... [truncated]"
         formatted_text += f"Full source content limited to {max_tokens_per_source} tokens: {raw_content}\n\n"
-        formatted_text += f"{'='*80}\n\n"  # End section separator
+        formatted_text += f"{'=' * 80}\n\n"  # End section separator
 
     return formatted_text.strip()
 
@@ -61,16 +59,16 @@ def format_sections(sections: list[Section]) -> str:
     formatted_str = ""
     for idx, section in enumerate(sections, 1):
         formatted_str += f"""
-{'='*60}
+{"=" * 60}
 Section {idx}: {section.name}
-{'='*60}
+{"=" * 60}
 Description:
 {section.description}
 Requires Research: 
 {section.research}
 
 Content:
-{section.content if section.content else '[Not yet written]'}
+{section.content if section.content else "[Not yet written]"}
 
 """
     return formatted_str

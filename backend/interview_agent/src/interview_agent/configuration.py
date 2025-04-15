@@ -12,11 +12,11 @@ from langchain_core.runnables import RunnableConfig
 class Configuration:
     """The configuration for the agent."""
 
-    # Changeme: Add configurable values here!
-    # these values can be pre-set when you
-    # create assistants (https://langchain-ai.github.io/langgraph/cloud/how-tos/configuration_cloud/)
-    # and when you invoke the graph
-    my_configurable_param: str = "changeme"
+    quizzer_provider: str = "openai"
+    quizzer_model: str = "gpt-4o-mini"
+    number_of_questions: int = 2
+    feedback_provider: str = "openai"
+    feedback_model: str = "gpt-4o-mini"
 
     @classmethod
     def from_runnable_config(

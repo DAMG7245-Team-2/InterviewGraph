@@ -15,7 +15,5 @@ dependencies = [
     "langchain-openai>=0.3.11",
     "pinecone[asyncio]>=6.0.2",
     "langchain-huggingface>=0.1.2",
-    "uvicorn>=0.34.0",
-    "fastapi>=0.115.12",
     "python-dotenv>=1.1.0",
 ]
