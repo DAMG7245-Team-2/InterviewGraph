@@ -3,3 +3,12 @@ fsspec>=2025.3.2,<2026.0.0
 huggingface-hub>=0.30.2,<0.31.0
 snowflake-connector-python[pandas]>=3.14.0,<4.0.0
 python-dotenv>=1.1.0,<2.0.0
+snowflake-connector-python 
+snowflake-sqlalchemy 
+langchain-openai
+langchain
+openai
+apache-airflow-providers-snowflake
+kaggle 
+datasets
+huggingface_hub[fsspec]
