@@ -12,7 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def merge_datasets(
-    hf_path: str = "./tmp_data/hf_data/interview-questions.csv", 
+    hf_path: str = "./tmp_data/hf_data/information.csv", 
     kaggle_path: str = "./tmp_data/kaggle_data/Software Questions.csv", 
     output_path: str = "./tmp_data/merged_data.csv",
 ):
@@ -63,7 +63,7 @@ def merge_datasets(
 
 if __name__ == "__main__":
     merged_csv_path = merge_datasets(
-        hf_path="./tmp_data/hf_data/interview-questions.csv",
+        hf_path="./tmp_data/hf_data/information.csv",
         kaggle_path="./tmp_data/kaggle_data/Software Questions.csv",
         output_path="./tmp_data/merged_data.csv"
     )
