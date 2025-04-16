@@ -26,6 +26,7 @@
     "mermaid": "^10.9.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.5.0",
+    "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "tailwindcss": "^4.1.4",
     "typescript": "~5.7.2",
