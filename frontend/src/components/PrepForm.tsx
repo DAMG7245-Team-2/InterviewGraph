@@ -89,18 +89,14 @@ const PrepForm: React.FC = () => {
         </div>
       )}
       {report && !error && (
-        <div className="mt-4 p-6 bg-gray-800 border border-gray-700 rounded-lg shadow-xl transition-all duration-300 ease-out overflow-y-auto max-h-100 hover:shadow-2xl">
+        <div className="mt-4 p-6 bg-gray-800 border border-gray-700 rounded-lg shadow-xl transition-all duration-300 ease-out overflow-y-auto hover:shadow-2xl">
           <div className="prose prose-invert dark:prose-invert max-w-none text-left text-gray-100 markdown">
             <ReactMarkdown
               components={{
                 code({ node, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '');
                   if (match && match[1] === 'mermaid') {
-                    return (
-                    <div className='flex justify-center'>
-                      <MermaidComponent>{String(children).trim()}</MermaidComponent>;
-                    </div>
-                    );
+                    return (<MermaidComponent>{String(children).trim()}</MermaidComponent>)
                   }
                   return (
                     <code className={className} {...props}>
