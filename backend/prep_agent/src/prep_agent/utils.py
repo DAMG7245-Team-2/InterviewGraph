@@ -30,7 +30,7 @@ def unique_formatted_sources(search_results, max_tokens_per_source: int = 4000) 
         sources.extend(result["results"])
 
     unique_url_sources = {source["url"]: source for source in sources}
-    formatted_text = "Content from sources:\n"
+    formatted_text = "Content from web search:\n"
     for i, source in enumerate(unique_url_sources.values(), 1):
         formatted_text += f"{'=' * 80}\n"  # Clear section separator
         formatted_text += f"Source: {source['title']}\n"
@@ -74,17 +74,31 @@ Content:
     return formatted_str
 
 
-def format_rag_contexts(matches: list) -> str:
+def format_rag_contexts(matches: list, max_tokens_per_source: int = 4000) -> str:
     """Formats Pinecone results into a readable string."""
-    contexts = []
-    for x in matches:
-        text = (
-            f"Text: {x['metadata']['text']}\n"
-            f"Title: {x['metadata'].get('title', 'N/A')}\n"
-            f"Author: {x['metadata'].get('author', 'N/A')}\n"
+    sources = []
+    sources.extend([text["metadata"] for text in matches])
+    formatted_text = "Content from RAG:\n"
+    # TODO: add url metadata to pinecone resources for better citations
+    for i, source in enumerate(sources, 1):
+        formatted_text += f"{'=' * 80}\n"
+        formatted_text += f"Source: {source['title']}\n"
+        formatted_text += f"{'-' * 80}\n"
+        formatted_text += (
+            f"Author: {source['author'] if source['author'] else 'Pinecone RAG'}\n===\n"
         )
-        contexts.append(text)
-    return "\n---\n".join(contexts)
+        char_limit = max_tokens_per_source * 4
+        # Handle None raw_content
+        raw_content = source.get("text", "")
+        if raw_content is None:
+            raw_content = ""
+            print(f"Warning: No text found for RAG source {source['title']}")
+        if len(raw_content) > char_limit:
+            raw_content = raw_content[:char_limit] + "... [truncated]"
+        formatted_text += f"Full source content limited to {max_tokens_per_source} tokens: {raw_content}\n\n"
+        formatted_text += f"{'=' * 80}\n\n"  # End section separator
+
+    return formatted_text.strip()
 
 
 async def search_pinecone(
@@ -109,4 +123,4 @@ async def search_pinecone(
                 match for match in matches if match.get("score", 0) >= score_threshold
             ]
             responses.append(format_rag_contexts(filtered_matches))
-    return "\n---\n".join(responses)
+    return "".join(responses)

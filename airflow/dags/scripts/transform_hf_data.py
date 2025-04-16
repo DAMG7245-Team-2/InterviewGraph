@@ -9,8 +9,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
-
-def transform_hf_data(hf_path : str = "./tmp_data/hf_data/interview-questions.csv"):
+def transform_hf_data(hf_path : str = "./tmp_data/hf_data/information.csv"):
     """
     Transform Hugging Face dataset to standardized format.
     
