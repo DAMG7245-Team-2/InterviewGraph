@@ -1,11 +1,8 @@
+__pycache__
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Airflow
-airflow/logs/
-airflow/config/kaggle.json
 
 # C extensions
 *.so
@@ -35,7 +32,7 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
-*.csv
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -54,8 +51,6 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-scraped_md/
-airflow/config/kaggle.json
 
 # Translations
 *.mo
