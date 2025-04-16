@@ -198,7 +198,7 @@ follow_up_queries: List[SearchQuery] = Field(
 </format>
 """
 
-final_section_writer_instructions = """You are an expert technical writer with ability to write Mermaid MD code, crafting a section that synthesizes information from the rest of the report.
+final_section_writer_instructions = """You are an expert technical writer, craft a section that synthesizes information from the rest of the report.
 
 <Report topic>
 {topic}
@@ -217,11 +217,14 @@ final_section_writer_instructions = """You are an expert technical writer with a
 </Available report content>
 
 <Task>
-1. Section-Specific Approach:
+{task}
+</Task>
 
-Be mindful of the kind of section you are writing based on the section name. You may expect only one of three kinds of sections (Introduction, Roadmap, Conclusion/Summary).
+<Quality Checks>
+{quality_checks}
+</Quality Checks>"""
 
-If section name contains "Introduction":
+introduction_section_task = """
 - Use # for report title (Markdown format)
 - The report title should be of the form: [target job title] Interview Preparation Guide
 - 50-100 word limit
@@ -230,7 +233,19 @@ If section name contains "Introduction":
 - Use a clear narrative arc to introduce the interview preparation guide
 - No sources section needed
 
-If section name contains "Roadmap":
+Writing Approach:
+- Use concrete details over general statements
+- Make every word count
+- Focus on your single most important point
+"""
+
+introduction_section_quality_checks = """
+- For introduction: 50-100 word limit, # for report title, no structural elements, no sources section
+- Markdown format
+- Do not include word count or any preamble in your response
+"""
+
+roadmap_section_task = """
 - No Introduction needed
 - Generate 1 valid Mermaid MD code block for a flowchart diagram illustrating the logical progression of concepts covered in the report
 - Use Markdown format
@@ -238,7 +253,13 @@ If section name contains "Roadmap":
 - Mermaid MD code should be contained within a code block (triple backticks) and start with ```mermaid
 - Mermaid MD code should be a flowchart diagram of the recommended roadmap to achieve the preparation for the topic divided into 3 sections (Fundamentals, Intermediate, Advanced)
 - Each node in the diagram should have a name of the concept
+"""
 
+roadmap_section_quality_checks = """
+- For roadmap: generate valid Mermaid MD code for a flowchart diagram illustrating the logical progression of concepts covered in the report. Enclosed in code block (triple backticks) and start with ```mermaid
+"""
+
+conclusion_section_task = """
 If section name contains "Conclusion/Summary":
 - Use ## for section title (Markdown format)
 - 100-150 word limit
@@ -255,17 +276,8 @@ If section name contains "Conclusion/Summary":
       - Ensure proper indentation and spacing
 - End with specific next steps or implications
 - No sources section needed
+"""
 
-3. Writing Approach:
-- Use concrete details over general statements
-- Make every word count
-- Focus on your single most important point
-</Task>
-
-<Quality Checks>
-- For introduction: 50-100 word limit, # for report title, no structural elements, no sources section
-- For roadmap: generate valid Mermaid MD code for a flowchart diagram illustrating the logical progression of concepts covered in the report. Enclosed in code block (triple backticks) and start with ```mermaid
+conclusion_section_quality_checks = """
 - For conclusion: 100-150 word limit, ## for section title, only ONE structural element at most, no sources section
-- Markdown format
-- Do not include word count or any preamble in your response
-</Quality Checks>"""
+"""
