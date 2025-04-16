@@ -32,6 +32,12 @@ from prep_agent.prompts import (
     section_writer_instructions,
     section_grader_instructions,
     final_section_writer_instructions,
+    introduction_section_task,
+    introduction_section_quality_checks,
+    roadmap_section_task,
+    roadmap_section_quality_checks,
+    conclusion_section_task,
+    conclusion_section_quality_checks,
 )
 from prep_agent.utils import async_search, format_sections, search_pinecone
 
@@ -347,11 +353,26 @@ async def write_roadmap_conclusion(state: SectionState, config: RunnableConfig):
     my_config = Configuration.from_runnable_config(config)
 
     # Format system instructions
+    section_specific_task_instructions = ""
+    section_specific_quality_checks = ""
+
+    if "Introduction" in section.name:
+        section_specific_task_instructions = introduction_section_task
+        section_specific_quality_checks = introduction_section_quality_checks
+    elif "Roadmap" in section.name:
+        section_specific_task_instructions = roadmap_section_task
+        section_specific_quality_checks = roadmap_section_quality_checks
+    elif "Conclusion/Summary" in section.name:
+        section_specific_task_instructions = conclusion_section_task
+        section_specific_quality_checks = conclusion_section_quality_checks
+
     system_instructions = final_section_writer_instructions.format(
         topic=topic,
         section_name=section.name,
         section_topic=section.description,
         context=completed_report_sections,
+        task=section_specific_task_instructions,
+        quality_checks=section_specific_quality_checks,
     )
 
     # Generate section
