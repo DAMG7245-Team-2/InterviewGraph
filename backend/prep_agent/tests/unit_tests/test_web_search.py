@@ -77,7 +77,7 @@ async def test_search_web(
 
     # Verify the results
     assert "source_str" in result
-    assert result["source_str"] == "Web search resultsPinecone search results"
+    assert result["source_str"] == "Pinecone search resultsWeb search results"
     assert result["search_iterations"] == 1
 
 

@@ -118,17 +118,26 @@ section_writer_instructions = """Write one section of a interview preparation gu
 </Writing Guidelines>
 
 <Citation Rules>
+- When the content is from web search, use the following format:
 - Assign each unique URL a single citation number in your text
 - End with ### Sources that lists each source with corresponding numbers
 - IMPORTANT: Number sources sequentially without gaps (1,2,3,4...) in the final list regardless of which sources you choose
 - Example format:
   [1] Source Title: URL
   [2] Source Title: URL
+
+- When the content is from RAG, use the following format:
+- Assign each unique AUTHOR a single citation number in your text
+- End with ### Sources that lists each source with corresponding numbers
+- IMPORTANT: Number sources sequentially without gaps (1,2,3,4...) in the final list regardless of which sources you choose
+- Example format:
+  [1] Source Title: AUTHOR
+  [2] Source Title: AUTHOR
 </Citation Rules>
 
 <Final Check>
 1. Verify that EVERY claim is grounded in the provided Source material
-2. Confirm each URL appears ONLY ONCE in the Source list
+2. Confirm each URL or AUTHOR appears ONLY ONCE in the Source list
 3. Verify that sources are numbered sequentially (1,2,3...) without any gaps
 </Final Check>
 """
