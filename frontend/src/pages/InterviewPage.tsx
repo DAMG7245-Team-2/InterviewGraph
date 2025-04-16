@@ -1,4 +1,4 @@
-import ChatBox from "../components/ChatBox.tsx";
+import ChatBox from "../components/ChatBox";
 
 const InterviewPage: React.FC = () => {
     return (
