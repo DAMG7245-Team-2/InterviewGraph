@@ -20,8 +20,14 @@ async def test_search_pinecone():
     top_k = 1
     result = await search_pinecone(index, embeddings, query_list, top_k)
     expected_result = (
-        "Text: "
-        + query_list[0]
-        + "\nTitle: DataEngineeringWithPython\nAuthor: Paul Crickard\n"
-    )
+        "Content from RAG:\n"
+        + f"{'=' * 80}\n"
+        + "Source: DataEngineeringWithPython\n"
+        + f"{'-' * 80}\n"
+        + "Author: Paul Crickard\n"
+        + "Full source content limited to 4000 tokens: "
+        + query_list[0][: 4000 * 4]
+        + "\n\n"
+        + f"{'=' * 80}\n\n"
+    ).strip()
     assert result == expected_result
