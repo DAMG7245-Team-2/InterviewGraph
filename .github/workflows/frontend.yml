@@ -16,11 +16,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Deploy to Vercel Action
-        uses: BetaHuhn/deploy-to-vercel-action@latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          node-version: '23'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          WORKING_DIRECTORY: frontend
+        run: vercel --prod --cwd frontend
