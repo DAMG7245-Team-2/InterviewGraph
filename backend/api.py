@@ -1,15 +1,21 @@
 import uuid
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
 
-from langgraph.types import Command
-
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from interview_agent.graph import graph_with_checkpoint as interview_agent_graph
+from langgraph.types import Command
 from prep_agent.graph import graph as prep_agent_graph
 from pydantic import BaseModel, Field
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*']
+)
 
 class UserInput(BaseModel):
     message: str
@@ -17,6 +23,9 @@ class UserInput(BaseModel):
         description="Thread ID to persist and continue a multi-turn conversation.",
         default=None,
     )
+
+class PrepRequest(BaseModel):
+    job_description: str
 
 
 @app.get("/")
@@ -71,10 +80,10 @@ async def invoke_interview(user_input: UserInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.post("/prep")
-async def invoke_prep(job_description: str):
-    output = await prep_agent_graph.ainvoke({"topic": job_description})
-    with open("final_report.md", "w") as f:
-        f.write(output["final_report"])
-    return FileResponse("final_report.md", media_type="text/markdown")
+async def invoke_prep(request: PrepRequest):
+    try:
+        output = await prep_agent_graph.ainvoke({"topic": request.job_description})
+        return {"final_report": output["final_report"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
