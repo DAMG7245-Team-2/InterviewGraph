@@ -29,10 +29,10 @@ function formatTime(seconds: number) {
 }
 
 export default function MockInterview() {
-  const jobDescription = localStorage.getItem("jobDescription") || "";
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [jobDescription, setJobDescription] = useState(() => localStorage.getItem("job_description") || "");
   const [responses, setResponses] = useState(() => JSON.parse(localStorage.getItem("responses") || "[]") || Array(mockQuestions.length).fill(""));
   const [currentIndex, setCurrentIndex] = useState(() => Number(localStorage.getItem("currentIndex")) || 0);
   const [showTextarea, setShowTextarea] = useState(false);
@@ -47,7 +47,13 @@ export default function MockInterview() {
 
   useEffect(() => {
     if (location.state?.fromJobDescription) {
-      localStorage.clear();
+      // Clear only interview-specific data, NOT job description
+      localStorage.removeItem("responses");
+      localStorage.removeItem("currentIndex");
+      localStorage.removeItem("feedback");
+      localStorage.removeItem("completed");
+      localStorage.removeItem("elapsedTime");
+
       setResponses(Array(mockQuestions.length).fill(""));
       setCurrentIndex(0);
       setShowTextarea(false);
@@ -109,7 +115,13 @@ export default function MockInterview() {
   };
 
   const restartInterview = () => {
-    localStorage.clear();
+    // Only clear interview-specific data, not job description
+    localStorage.removeItem("responses");
+    localStorage.removeItem("currentIndex");
+    localStorage.removeItem("feedback");
+    localStorage.removeItem("completed");
+    localStorage.removeItem("elapsedTime");
+
     setResponses(Array(mockQuestions.length).fill(""));
     setCurrentIndex(0);
     setShowTextarea(false);
@@ -125,19 +137,20 @@ export default function MockInterview() {
     doc.text("Mock Interview Review", 20, 20);
     doc.setFontSize(12);
     doc.text(`Total Time: ${formatTime(elapsedTime)}`, 20, 30);
-    doc.text(`\nJob Description:`, 20, 40);
-    doc.text(doc.splitTextToSize(jobDescription, 170), 20, 50);
+    doc.text("Job Description:", 20, 40);
+    const wrappedDesc = doc.splitTextToSize(jobDescription, 170);
+    doc.text(wrappedDesc, 20, 50);
+    let y = 50 + wrappedDesc.length * 7;
 
-    let y = 60 + doc.splitTextToSize(jobDescription, 170).length * 7;
-
-    doc.text(`\nFeedback: ${feedback}`, 20, y);
+    doc.text(`Feedback: ${feedback}`, 20, y);
     y += 15;
 
     mockQuestions.forEach((q, i) => {
       const answer = responses[i]?.trim() || "Skipped";
       doc.text(`Q${i + 1}: ${q}`, 20, y);
-      doc.text(`A: ${answer}`, 20, y + 7);
-      y += 15;
+      y += 7;
+      doc.text(`A: ${answer}`, 20, y);
+      y += 10;
     });
 
     doc.save("mock_interview_review.pdf");
