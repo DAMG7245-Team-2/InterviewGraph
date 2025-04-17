@@ -39,4 +39,8 @@ jobs:
 
       - run: poetry install --no-interaction
 
+      - run: pip install -e backend/prep_agent
+
+      - run: pip install -e backend/interview_agent
+
       - run: poetry run pytest
