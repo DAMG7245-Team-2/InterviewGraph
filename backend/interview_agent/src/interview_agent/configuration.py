@@ -14,7 +14,7 @@ class Configuration:
 
     quizzer_provider: str = "openai"
     quizzer_model: str = "gpt-4o-mini"
-    number_of_questions: int = 2
+    number_of_questions: int = 5
     feedback_provider: str = "openai"
     feedback_model: str = "gpt-4o-mini"
 
