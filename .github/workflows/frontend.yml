@@ -19,14 +19,15 @@ jobs:
       - name: ⚙️ Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 23
 
       - name: 📦 Install dependencies
         working-directory: frontend
         run: npm ci
-
-      - name: 🚀 Install Vercel CLI globally
-        run: npm install -g vercel
+  
+      - name: 🚀 Install Vercel CLI
+        working-directory: frontend
+        run: npm install vercel
 
       - name: 🌐 Deploy to Vercel
         uses: BetaHuhn/deploy-to-vercel-action@v1
