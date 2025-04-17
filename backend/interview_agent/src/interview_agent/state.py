@@ -6,10 +6,12 @@ import operator
 from typing import Annotated, List, TypedDict
 
 from pydantic import BaseModel, Field
+from langchain_core.messages import AnyMessage
 
 
 class InputState(BaseModel):
-    topic: str = Field(description="Topic of the interview")
+    job_description: str = Field(description="Job description")
+    messages: List[AnyMessage] = Field(description="Messages from the user", default=[])
 
 
 class QA(BaseModel):
@@ -31,7 +33,9 @@ class Feedback(BaseModel):
 
 
 class State(TypedDict):
+    job_description: str
     topic: str
     qa_list: List[QA]
     completed_qa: Annotated[list[QA], operator.add]
     feedback: List[Feedback]
+    messages: List[AnyMessage]
