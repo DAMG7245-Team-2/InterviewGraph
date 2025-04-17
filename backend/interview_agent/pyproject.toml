@@ -19,4 +19,6 @@ dependencies = [
     "elevenlabs (>=1.56.0,<2.0.0)",
     "sounddevice (>=0.5.1,<0.6.0)",
     "openai (>=1.72.0,<2.0.0)",
+    "snowflake-sqlalchemy>=1.7.3",
+    "sqlalchemy[asyncio] (>=2.0.40,<3.0.0)"
 ]

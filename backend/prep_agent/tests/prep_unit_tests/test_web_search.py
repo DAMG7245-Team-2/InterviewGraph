@@ -71,13 +71,8 @@ async def test_search_web(
     mock_async_search.assert_called_once_with(
         query_list, config["config"].max_search_depth
     )
-    # mock_search_pinecone.assert_called_once_with(
-    #     mock_index, mock_embeddings.return_value, query_list, config["config"].top_k
-    # )
-
-    # Verify the results
     assert "source_str" in result
-    assert result["source_str"] == "Pinecone search resultsWeb search results"
+    assert result["source_str"] == "Pinecone search results\n\nWeb search results"
     assert result["search_iterations"] == 1
 
 
