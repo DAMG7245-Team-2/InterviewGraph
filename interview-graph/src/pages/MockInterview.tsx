@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Keyboard, Mic, Square, Volume2 } from "lucide-react";
+import { Keyboard, Mic, Square, Volume2, Contact } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 import { useNavigate, useLocation } from "react-router-dom";
+import "@/styles/animated-gradient.css";
 
 const mockQuestions = [
   "Tell me about yourself.",
@@ -14,7 +15,7 @@ const mockQuestions = [
   "Where do you see yourself in five years?"
 ];
 
-const ELEVENLABS_API_KEY = "sk_0c58373b505a6d26647ecc8baecaac4b6046b818b4feb3a5";
+
 const DEFAULT_VOICES = [
   { id: "EXAVITQu4vr4xnSDxMaL", label: "Rachel" },
   { id: "MF3mGyEYCl7XYWbV9V6O", label: "Domi" },
@@ -32,6 +33,18 @@ export default function MockInterview() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [responses, setResponses] = useState(() => JSON.parse(localStorage.getItem("responses") || "[]") || Array(mockQuestions.length).fill(""));
+  const [currentIndex, setCurrentIndex] = useState(() => Number(localStorage.getItem("currentIndex")) || 0);
+  const [showTextarea, setShowTextarea] = useState(false);
+  const [feedback, setFeedback] = useState(() => localStorage.getItem("feedback") || "");
+  const [completed, setCompleted] = useState(() => localStorage.getItem("completed") === "true");
+  const [isListening, setIsListening] = useState(false);
+  const [voiceId, setVoiceId] = useState(DEFAULT_VOICES[0].id);
+  const [elapsedTime, setElapsedTime] = useState(() => Number(localStorage.getItem("elapsedTime")) || 0);
+
+  const recognitionRef = useRef(null);
+  const hasPlayedRef = useRef(false);
+
   useEffect(() => {
     if (location.state?.fromJobDescription) {
       localStorage.clear();
@@ -45,20 +58,6 @@ export default function MockInterview() {
       window.history.replaceState({}, document.title);
     }
   }, [location]);
-
-  const jobDescription = localStorage.getItem("jobDescription") || "Not provided.";
-
-  const [responses, setResponses] = useState(() => JSON.parse(localStorage.getItem("responses") || "[]") || Array(mockQuestions.length).fill(""));
-  const [currentIndex, setCurrentIndex] = useState(() => Number(localStorage.getItem("currentIndex")) || 0);
-  const [showTextarea, setShowTextarea] = useState(false);
-  const [feedback, setFeedback] = useState(() => localStorage.getItem("feedback") || "");
-  const [completed, setCompleted] = useState(() => localStorage.getItem("completed") === "true");
-  const [isListening, setIsListening] = useState(false);
-  const [voiceId, setVoiceId] = useState(DEFAULT_VOICES[0].id);
-  const [elapsedTime, setElapsedTime] = useState(() => Number(localStorage.getItem("elapsedTime")) || 0);
-
-  const recognitionRef = useRef(null);
-  const hasPlayedRef = useRef(false);
 
   useEffect(() => {
     let timer;
@@ -130,6 +129,7 @@ export default function MockInterview() {
     doc.text(doc.splitTextToSize(jobDescription, 170), 20, 50);
 
     let y = 60 + doc.splitTextToSize(jobDescription, 170).length * 7;
+
     doc.text(`\nFeedback: ${feedback}`, 20, y);
     y += 15;
 
@@ -202,16 +202,19 @@ export default function MockInterview() {
   const handleStopVoice = () => stopRecognition();
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-gray-800 flex flex-col items-center justify-start p-10">
+    <div className="animated-gradient min-h-screen text-gray-800 flex flex-col items-center justify-start p-10">
       <div className="max-w-5xl w-full space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-5xl font-bold text-lavender-600">Mock Interview</h1>
-          <div className="text-lg font-medium text-gray-700">⏱️ {formatTime(elapsedTime)}</div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 text-gray-700">
+            <Contact className="w-7 h-7 text-green" />
+            <h1 className="text-4xl font-semibold">Mock Interview</h1>
+          </div>
+          <div className="text-lg font-medium text-gray-600">⏱️ {formatTime(elapsedTime)}</div>
         </div>
 
-        <div className="flex items-center justify-end space-x-2">
-          <label htmlFor="voice-select" className="text-sm font-medium">Voice:</label>
-          <select id="voice-select" value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className="border rounded px-3 py-1 text-sm">
+        <div className="flex items-center gap-2">
+          <label htmlFor="voice-select" className="text-sm font-medium text-gray-700">Voice:</label>
+          <select id="voice-select" value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className="border rounded px-3 py-1 text-sm bg-white">
             {DEFAULT_VOICES.map((voice) => (
               <option key={voice.id} value={voice.id}>{voice.label}</option>
             ))}
@@ -220,50 +223,71 @@ export default function MockInterview() {
 
         {!completed ? (
           <AnimatePresence mode="wait">
-            <motion.div key={currentIndex} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.5 }} className="border rounded-3xl shadow-xl p-12 bg-white space-y-8 w-full">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="rounded-2xl shadow-lg p-10 bg-white/90 backdrop-blur-md space-y-6"
+            >
               <div className="flex items-center justify-between">
-                <p className="text-2xl font-semibold leading-relaxed">{mockQuestions[currentIndex]}</p>
-                <Volume2 className="w-6 h-6 text-lavender-600 cursor-pointer" onClick={() => playWithElevenLabs(mockQuestions[currentIndex])} />
+                <p className="text-xl font-medium text-gray-700 leading-relaxed">
+                  {mockQuestions[currentIndex]}
+                </p>
+                <Volume2 className="w-5 h-5 text-[#ba68c8] cursor-pointer" onClick={() => playWithElevenLabs(mockQuestions[currentIndex])} />
               </div>
               {showTextarea && (
-                <Textarea value={responses[currentIndex] || ""} onChange={(e) => handleResponseChange(e.target.value)} placeholder="Type your response here..." rows={6} className="rounded-lg border-gray-300 shadow-sm" />
+                <Textarea
+                  value={responses[currentIndex] || ""}
+                  onChange={(e) => handleResponseChange(e.target.value)}
+                  placeholder="Type your response here..."
+                  rows={6}
+                  className="rounded-lg border-gray-300 shadow-sm"
+                />
               )}
               <div className="flex flex-col space-y-4">
                 <div className="flex items-center space-x-4">
-                  <Button variant="ghost" className="text-lavender-600" onClick={() => setShowTextarea(true)}><Keyboard className="mr-2" />Answer by typing</Button>
+                  <Button variant="ghost" className="text-[#ba68c8] hover:text-[#ab47bc]" onClick={() => setShowTextarea(true)}>
+                    <Keyboard className="mr-2" /> Answer by typing
+                  </Button>
                   {!isListening ? (
-                    <Button variant="ghost" className="text-lavender-600" onClick={handleStartVoice}><Mic className="mr-2" />Answer by voice</Button>
+                    <Button variant="ghost" className="text-[#ba68c8] hover:text-[#ab47bc]" onClick={handleStartVoice}>
+                      <Mic className="mr-2" /> Answer by voice
+                    </Button>
                   ) : (
-                    <Button variant="ghost" className="text-red-600" onClick={handleStopVoice}><Square className="mr-2" />Stop recording</Button>
+                    <Button variant="ghost" className="text-red-600 hover:text-red-700" onClick={handleStopVoice}>
+                      <Square className="mr-2" /> Stop recording
+                    </Button>
                   )}
                 </div>
-                {isListening && <div className="text-sm text-purple-600">🎙️ Listening...</div>}
+                {isListening && <div className="text-sm text-purple-500">🎙️ Listening...</div>}
               </div>
-              <div className="flex justify-end space-x-4">
-                <Button variant="outline" onClick={handleNext} className="text-gray-700">Skip</Button>
-                <Button onClick={handleNext} disabled={!currentResponse} className={`px-6 py-2 rounded-md shadow-md ${currentResponse ? "bg-purple-200 hover:bg-purple-300 text-gray-900" : "bg-gray-300 text-white cursor-not-allowed"}`}>Next</Button>
+              <div className="flex justify-end space-x-4 pt-2">
+                <Button variant="outline" onClick={handleNext} className="text-gray-700 border-gray-300">Skip</Button>
+                <Button onClick={handleNext} disabled={!currentResponse} className={`px-5 py-2 font-medium rounded-md shadow-md transition-colors duration-300 ${currentResponse ? "bg-[#f8bbd0] hover:bg-[#f48fb1] text-gray-800" : "bg-gray-200 text-white cursor-not-allowed"}`}>Next</Button>
               </div>
             </motion.div>
           </AnimatePresence>
         ) : (
           <div className="space-y-6 w-full">
-            <div className="p-6 border-l-4 border-lavender-500 bg-white rounded-2xl shadow-lg w-full">
-              <h2 className="text-2xl font-bold mb-2">🧠 AI Feedback</h2>
-              <p className="text-lg leading-relaxed text-gray-700">{feedback}</p>
+            <div className="p-6 border-l-4 border-[#f8bbd0] bg-white/90 backdrop-blur-md rounded-2xl shadow-md">
+              <h2 className="text-2xl font-semibold mb-2 text-gray-700">🧠 AI Feedback</h2>
+              <p className="text-base leading-relaxed text-gray-700">{feedback}</p>
             </div>
-            <div className="p-6 border bg-white rounded-xl shadow space-y-4 w-full">
-              <h2 className="text-xl font-semibold mb-2">Review Your Interview</h2>
+            <div className="p-6 border bg-white/90 backdrop-blur-md rounded-xl shadow space-y-4">
+              <h2 className="text-lg font-semibold text-gray-700">Review Your Interview</h2>
               {mockQuestions.map((q, idx) => (
                 <div key={idx} className="border-t pt-3">
-                  <p className="font-semibold">Q{idx + 1}. {q}</p>
+                  <p className="font-medium">Q{idx + 1}. {q}</p>
                   <p className="text-sm mt-1 text-gray-700">{responses[idx]?.trim() ? responses[idx] : <span className="italic text-red-500">Skipped</span>}</p>
                 </div>
               ))}
             </div>
             <div className="flex flex-wrap gap-4 justify-end">
-              <Button onClick={restartInterview} className="bg-gray-200 hover:bg-gray-300 text-gray-900">Restart Interview</Button>
-              <Button onClick={() => navigate("/job-description")} className="bg-blue-200 hover:bg-blue-300 text-blue-900">Change Job Description</Button>
-              <Button onClick={exportToPDF} className="bg-green-200 hover:bg-green-300 text-green-900">Export as PDF</Button>
+              <Button onClick={restartInterview} className="bg-gray-200 hover:bg-gray-300 text-gray-800">Restart Interview</Button>
+              <Button onClick={() => navigate("/job-description")} className="bg-[#f3e5f5] hover:bg-[#e1bee7] text-[#6a1b9a]">Change Job Description</Button>
+              <Button onClick={exportToPDF} className="bg-[#ce93d8] hover:bg-[#ba68c8] text-white">Export as PDF</Button>
             </div>
           </div>
         )}
