@@ -22,13 +22,14 @@ const DEFAULT_VOICES = [
   { id: "21m00Tcm4TlvDq8ikWAM", label: "Bella" },
 ];
 
-function formatTime(seconds) {
+function formatTime(seconds: number) {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 export default function MockInterview() {
+  const jobDescription = localStorage.getItem("jobDescription") || "";
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -41,7 +42,7 @@ export default function MockInterview() {
   const [voiceId, setVoiceId] = useState(DEFAULT_VOICES[0].id);
   const [elapsedTime, setElapsedTime] = useState(() => Number(localStorage.getItem("elapsedTime")) || 0);
 
-  const recognitionRef = useRef(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasPlayedRef = useRef(false);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function MockInterview() {
   }, [location]);
 
   useEffect(() => {
-    let timer;
+    let timer: string | number | NodeJS.Timeout | undefined;
     if (!completed) {
       timer = setInterval(() => {
         setElapsedTime((prev) => {
@@ -81,7 +82,7 @@ export default function MockInterview() {
 
   const currentResponse = responses[currentIndex]?.trim();
 
-  const handleResponseChange = (value) => {
+  const handleResponseChange = (value: string) => {
     const updated = [...responses];
     updated[currentIndex] = value;
     setResponses(updated);
@@ -142,7 +143,7 @@ export default function MockInterview() {
     doc.save("mock_interview_review.pdf");
   };
 
-  const playWithElevenLabs = async (text) => {
+  const playWithElevenLabs = async (text: string) => {
     try {
       const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
       const response = await fetch(url, {
@@ -185,11 +186,11 @@ export default function MockInterview() {
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
-    recognition.onresult = (e) => {
+    recognition.onresult = (ev: SpeechRecognitionEvent) => {
       let interim = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const txt = e.results[i][0].transcript;
-        if (e.results[i].isFinal) accumulated += txt + " ";
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const txt = ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) accumulated += txt + " ";
         else interim += txt;
       }
       handleResponseChange(accumulated + interim);
@@ -285,7 +286,7 @@ export default function MockInterview() {
             </div>
             <div className="flex flex-wrap gap-4 justify-end">
               <Button onClick={restartInterview} className="bg-gray-200 hover:bg-gray-300 text-gray-800">Restart Interview</Button>
-              <Button onClick={() => navigate("/job-description")} className="bg-[#f3e5f5] hover:bg-[#e1bee7] text-[#6a1b9a]">Change Job Description</Button>
+              <Button onClick={() => navigate("/")} className="bg-[#f3e5f5] hover:bg-[#e1bee7] text-[#6a1b9a]">Change Job Description</Button>
               <Button onClick={exportToPDF} className="bg-[#ce93d8] hover:bg-[#ba68c8] text-white">Export as PDF</Button>
             </div>
           </div>
