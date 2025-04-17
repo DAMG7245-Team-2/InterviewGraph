@@ -10,4 +10,5 @@ apache-airflow-providers-snowflake
 kaggle 
 datasets
 huggingface_hub[fsspec]
-
+sentence_transformers
+pinecone
