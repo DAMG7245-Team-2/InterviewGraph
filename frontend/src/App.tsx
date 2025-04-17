@@ -1,23 +1,14 @@
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
-import InterviewPage from "./pages/InterviewPage.tsx";
-import PrepPage from "./pages/PrepPage.tsx";
-import HomePage from "./pages/HomePage.tsx";
+import { Routes, Route } from "react-router-dom";
+import JobDescriptionPage from "@/pages/JobDescriptionPage";
+import MockInterview from "@/pages/MockInterview";
 
-const App : React.FC = () => {
+function App() {
   return (
-    <Router>
-      <div className="w-full p-4 space-x-4 bg-gray-800">
-        <Link to="/" className="font-semibold text-emerald-500 hover:text-emerald-300">Home</Link>
-        <Link to="/interview" className="font-semibold text-emerald-500 hover:text-emerald-300">Interview Agent</Link>
-        <Link to="/prep" className="font-semibold text-emerald-500 hover:text-emerald-300">Prep Agent</Link>
-      </div>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/interview" element={<InterviewPage />} />
-        <Route path="/prep" element={<PrepPage />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/job-description" element={<JobDescriptionPage />} />
+      <Route path="/interview" element={<MockInterview />} />
+    </Routes>
   );
-};
+}
 
 export default App;
