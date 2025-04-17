@@ -4,9 +4,10 @@ import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
-from langgraph.types import Command
-
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from interview_agent.graph import graph_with_checkpoint as interview_agent_graph
+from langgraph.types import Command
 from prep_agent.graph import graph as prep_agent_graph
 from pydantic import BaseModel, Field
 
@@ -14,6 +15,14 @@ app = FastAPI()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class UserInput(BaseModel):
@@ -100,12 +109,7 @@ async def invoke_prep(prep_input: PrepInput):
     try:
         output = await prep_agent_graph.ainvoke({"topic": prep_input.job_description})
         logger.info(f"prep output: first 100 chars: {output['final_report'][:100]}")
-
-        with open("final_report.md", "w") as f:
-            f.write(output["final_report"])
-
-        return FileResponse("final_report.md", media_type="text/markdown")
-
+        return {"final_report": output["final_report"]}
     except Exception as e:
         logger.error(f"Error in invoke_prep: {e}")
         raise HTTPException(status_code=500, detail=str(e))

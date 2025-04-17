@@ -9,7 +9,8 @@ from airflow.utils.trigger_rule import TriggerRule
 from scripts.clean_data import clean_data
 from scripts.download_hf import download_hf_dataset
 from scripts.download_kaggle import download_kaggle_dataset
-from scripts.load_to_snowflake import load_to_snowflake
+from scripts.load_to_s3 import upload_to_s3
+
 from scripts.merge_datasets import merge_datasets
 from scripts.transform_hf_data import transform_hf_data
 from scripts.transform_kaggle_data import transform_kaggle_data 
@@ -18,6 +19,7 @@ default_args = {
     'owner': 'airflow',
     'start_date': datetime(2024, 1, 1),
     'retries': 1
+
 }
 
 def delete_tmp_data_folder(folder_path="./tmp_data"):
@@ -66,8 +68,9 @@ with DAG(
     )
 
     load = PythonOperator(
-        task_id='load_to_snowflake',
-        python_callable=load_to_snowflake
+        task_id='load_to_s3',
+        python_callable=upload_to_s3
+
     )
 
     cleanup_tmp_data = PythonOperator(

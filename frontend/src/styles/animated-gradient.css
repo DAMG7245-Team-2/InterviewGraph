@@ -1,0 +1,18 @@
+/* src/styles/animated-gradient.css */
+.animated-gradient {
+  background: linear-gradient(-45deg, #fce4ec, #f3e5f5, #e1bee7, #f8bbd0, #ce93d8);
+  background-size: 300% 300%;
+  animation: gradientFlow 20s ease-in-out infinite;
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
