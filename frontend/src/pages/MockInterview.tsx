@@ -32,7 +32,7 @@ export default function MockInterview() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [jobDescription, setJobDescription] = useState(() => localStorage.getItem("job_description") || "");
+  const [jobDescription] = useState(() => localStorage.getItem("job_description") || "");
   const [responses, setResponses] = useState(() => JSON.parse(localStorage.getItem("responses") || "[]") || Array(mockQuestions.length).fill(""));
   const [currentIndex, setCurrentIndex] = useState(() => Number(localStorage.getItem("currentIndex")) || 0);
   const [showTextarea, setShowTextarea] = useState(false);
