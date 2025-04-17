@@ -90,7 +90,7 @@ const PrepForm: React.FC = () => {
       )}
       {report && !error && (
         <div className="mt-4 p-6 bg-gray-800 border border-gray-700 rounded-lg shadow-xl transition-all duration-300 ease-out overflow-y-auto hover:shadow-2xl">
-          <div className="prose prose-invert dark:prose-invert max-w-none text-left text-gray-100 markdown">
+          <div className="justify-center prose prose-invert dark:prose-invert max-w-none text-left text-gray-100 markdown">
             <ReactMarkdown
               components={{
                 code({ node, className, children, ...props }) {
