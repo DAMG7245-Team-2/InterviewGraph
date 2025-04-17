@@ -15,7 +15,6 @@ const mockQuestions = [
   "Where do you see yourself in five years?"
 ];
 
-
 const DEFAULT_VOICES = [
   { id: "EXAVITQu4vr4xnSDxMaL", label: "Rachel" },
   { id: "MF3mGyEYCl7XYWbV9V6O", label: "Domi" },
