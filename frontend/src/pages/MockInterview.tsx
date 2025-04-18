@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Keyboard, Mic, Square, Volume2, Contact } from "lucide-react";
+import { Keyboard, Mic, Square, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -32,7 +32,7 @@ export default function MockInterview() {
   const [responses, setResponses] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTextarea, setShowTextarea] = useState(false);
-  const [feedbackList, setFeedbackList] = useState<{ question: string; feedback: string }[]>([]);
+  const [feedbackList, setFeedbackList] = useState<any[]>([]);
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -56,11 +56,9 @@ export default function MockInterview() {
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
-  
     if (!completed && !loading) {
       timer = setInterval(() => setElapsedTime((prev) => prev + 1), 1000);
     }
-  
     return () => clearInterval(timer);
   }, [completed, loading]);
 
@@ -82,15 +80,7 @@ export default function MockInterview() {
       if (data.feedback) {
         setCompleted(true);
         setLoading(false);
-
-        // Update structured feedback
-        setFeedbackList(
-          data.feedback.map((f: any, i: number) => ({
-            question: questions[i],
-            feedback: f.feedback || f, 
-          }))
-        );
-
+        setFeedbackList(data.feedback);
         return;
       }
 
@@ -128,13 +118,8 @@ export default function MockInterview() {
     stopRecognition();
     setShowTextarea(false);
     hasPlayedRef.current = false;
-
     const responseToSend = responses[currentIndex - 1]?.trim() || "Skipped";
-
-    if (currentIndex === 5) {
-      setLoading(true);
-    }
-
+    if (currentIndex === 5) setLoading(true);
     fetchNext(responseToSend);
   };
 
@@ -207,19 +192,14 @@ export default function MockInterview() {
     const margin = 20;
     const lineHeight = 7;
     const pageHeight = doc.internal.pageSize.height;
-  
     doc.setFontSize(16);
     doc.text("Mock Interview Review", margin, margin);
-  
     doc.setFontSize(12);
     let y = margin + 10;
-  
     doc.text(`Total Time: ${formatTime(elapsedTime)}`, margin, y);
     y += lineHeight;
-  
     doc.text("Job Description:", margin, y);
     y += lineHeight;
-  
     const descLines = doc.splitTextToSize(jobDescription, 170);
     descLines.forEach((line: string | string[]) => {
       if (y + lineHeight > pageHeight - margin) {
@@ -229,36 +209,45 @@ export default function MockInterview() {
       doc.text(line, margin, y);
       y += lineHeight;
     });
-  
     y += lineHeight;
-  
-    feedbackList.forEach((f, i) => {
-      const questionLines = doc.splitTextToSize(`Q${i + 1}: ${f.question}`, 170);
-      const answer = responses[i]?.trim() || "Skipped";
-      const answerLines = doc.splitTextToSize(`A: ${answer}`, 170);
-      const feedbackLines = doc.splitTextToSize(`Feedback: ${f.feedback}`, 170);
-  
-      [...questionLines, ...answerLines, ...feedbackLines].forEach((line) => {
-        if (y + lineHeight > pageHeight - margin) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.text(line, margin, y);
+    feedbackList.forEach((f: any, i) => {
+      const q = `Q${i + 1}: ${f.qa?.question}`;
+      const a = `A: ${f.qa?.given_answer || "Skipped"}`;
+      const e = `Expected: ${f.qa?.expected_answer || "N/A"}`;
+      const s = `Similarity: ${(f.similarity * 100).toFixed(2)}%`;
+      const feedback = `Feedback: ${f.feedback}`;
+      const allLines = [q, a, e, s, feedback];
+      allLines.forEach((line) => {
+        const wrapped = doc.splitTextToSize(line, 170);
+        wrapped.forEach((l: string) => {
+          if (y + lineHeight > pageHeight - margin) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(l, margin, y);
+          y += lineHeight;
+        });
         y += lineHeight;
       });
-  
-      y += lineHeight;
     });
-  
     doc.save("mock_interview_review.pdf");
   };
 
   return (
     <div className="animated-gradient min-h-screen text-gray-800 flex flex-col items-center justify-start p-10">
       <div className="max-w-5xl w-full space-y-8">
+  <div className="flex justify-start">
+    <Button
+      onClick={() => navigate("/")}
+      variant="ghost"
+      className="text-sm text-gray-600 hover:text-black flex items-center gap-2"
+    >
+      ← Back to Home
+    </Button>
+  </div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 text-gray-700">
-            <Contact className="w-7 h-7 text-green" />
+            <Mic className="w-7 h-7 text-green" />
             <h1 className="text-4xl font-semibold">Mock Interview</h1>
           </div>
           <div className="text-lg font-medium text-gray-600">⏱️ {formatTime(elapsedTime)}</div>
@@ -342,12 +331,17 @@ export default function MockInterview() {
           <div className="space-y-6 w-full">
             <div className="p-6 border-l-4 border-[#f8bbd0] bg-white/90 backdrop-blur-md rounded-2xl shadow-md">
               <h2 className="text-2xl font-semibold mb-2 text-gray-700">🧠 AI Feedback</h2>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {feedbackList.map((f, idx) => (
-                  <div key={idx} className="border-t pt-3">
-                    <p className="font-medium text-gray-800">Q{idx + 1}: {f.question}</p>
-                    <p className="text-sm text-gray-700 mt-1">📝 <span className="font-semibold text-purple-700">Feedback:</span> {f.feedback}</p>
+                <div key={idx} className="border-t pt-4">
+                  <p className="font-semibold text-gray-800">Q{idx + 1}: {f.qa?.question}</p>
+                  <div className="mt-2 space-y-1">
+                    <p className="text-sm text-gray-700"><span className="font-semibold">Your Answer:</span> {f.qa?.given_answer || <span className="italic text-red-500">Skipped</span>}</p>
+                    <p className="text-sm text-gray-700"><span className="font-semibold">Expected Answer:</span> {f.qa?.expected_answer || "N/A"}</p>
+                    <p className="text-sm text-gray-700"><span className="font-semibold">Similarity:</span> {(f.similarity * 100).toFixed(2)}%</p>
+                    <p className="text-sm text-gray-700"><span className="font-semibold">Feedback:</span> {f.feedback}</p>
                   </div>
+                </div>
                 ))}
               </div>
             </div>
@@ -364,7 +358,7 @@ export default function MockInterview() {
 
             <div className="flex flex-wrap gap-4 justify-end">
               <Button onClick={restartInterview} className="bg-gray-200 hover:bg-gray-300 text-gray-800">Restart Interview</Button>
-              <Button onClick={() => navigate("/")} className="bg-[#f3e5f5] hover:bg-[#e1bee7] text-[#6a1b9a]">Change Job Description</Button>
+              <Button onClick={() => navigate("/interview-job-description")} className="bg-[#f3e5f5] hover:bg-[#e1bee7] text-[#6a1b9a]">Change Job Description</Button>
               <Button onClick={exportToPDF} className="bg-[#ce93d8] hover:bg-[#ba68c8] text-white">Export as PDF</Button>
             </div>
           </div>
