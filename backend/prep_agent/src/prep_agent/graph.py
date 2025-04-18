@@ -25,6 +25,7 @@ from prep_agent.state import (
     Feedback,
 )
 from prep_agent.prompts import (
+    JOB_DESCRIPTION_VALIDATION_SYSTEM_INSTRUCTIONS,
     report_planner_query_writer_instructions,
     report_planner_instructions,
     query_writer_instructions,
@@ -57,7 +58,7 @@ async def is_valid_job_description(
         model_provider=writer_provider, model=writer_model_name
     )
     structured_llm = writer_model.with_structured_output(JobDescriptionValidation)
-    system_instructions = "You are a job description validator. You will be given a text and you will need to validate if it is a valid job description. If the job description is not valid, you will return 'invalid'. If the job description is valid, you will return 'valid'."
+    system_instructions = JOB_DESCRIPTION_VALIDATION_SYSTEM_INSTRUCTIONS
     messages = [
         SystemMessage(content=system_instructions),
         HumanMessage(content=job_description),
