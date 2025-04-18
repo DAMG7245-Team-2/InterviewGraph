@@ -5,6 +5,7 @@ from __future__ import annotations
 import operator
 from typing import Annotated, List, TypedDict
 
+from interview_agent.util import AvailableCategories, AvailableDifficulties
 from pydantic import BaseModel, Field
 from langchain_core.messages import AnyMessage
 
@@ -24,6 +25,15 @@ class QAList(BaseModel):
     qa_list: List[QA] = Field(description="List of question and answers")
 
 
+class Q(BaseModel):
+    question: str = Field(description="Interview Question")
+    answer: str = Field(description="Answer to the question")
+
+
+class QList(BaseModel):
+    q_list: List[Q] = Field(description="List of Interview Questions and their Answers")
+
+
 class Feedback(BaseModel):
     qa: QA = Field(description="Question and answer pair")
     similarity: float = Field(
@@ -39,3 +49,17 @@ class State(TypedDict):
     completed_qa: Annotated[list[QA], operator.add]
     feedback: List[Feedback]
     messages: List[AnyMessage]
+
+
+class SQLTOOL_ARGS_SCHEMA(BaseModel):
+    category: AvailableCategories = Field(
+        default=AvailableCategories.ALGORITHMS,
+        description="The category of the questions to retrieve",
+    )
+    difficulty: AvailableDifficulties = Field(
+        default=AvailableDifficulties.MEDIUM,
+        description="The difficulty level of the questions to retrieve",
+    )
+    num_questions: int = Field(
+        default=5, description="The number of questions to retrieve"
+    )

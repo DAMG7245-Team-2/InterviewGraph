@@ -3,7 +3,6 @@ import uuid
 import logging
 
 from fastapi import FastAPI, HTTPException, Response
-from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from interview_agent.graph import graph_with_checkpoint as interview_agent_graph
 from interview_agent.state import Feedback

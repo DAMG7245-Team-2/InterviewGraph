@@ -60,6 +60,7 @@ def test_get_interview_questions(create_snowflake_engine):
         AvailableCategories.ALGORITHMS,
         AvailableDifficulties.EASY,
     )
+    print(questions[:10])
     assert len(questions) > 0
 
 
