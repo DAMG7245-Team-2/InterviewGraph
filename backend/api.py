@@ -1,6 +1,6 @@
-from typing import List
 import logging
 import os
+from typing import List
 import uuid
 
 from dotenv import load_dotenv
@@ -29,6 +29,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class UserInput(BaseModel):
     message: str = Field(description="Message from the user")
     thread_id: str | None = Field(
@@ -47,10 +48,10 @@ class TTSInput(BaseModel):
     text: str
     voice_id: str
 
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-
 
 @app.get("/health")
 async def health():
