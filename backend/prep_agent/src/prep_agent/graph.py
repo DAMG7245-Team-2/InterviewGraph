@@ -225,11 +225,10 @@ async def search_web(state: SectionState, config: RunnableConfig):
 
     # Get configuration
     my_config = Configuration.from_runnable_config(config)
-    max_search_depth = my_config.max_search_depth
     top_k = my_config.top_k
     score_threshold = my_config.score_threshold
     # Perform search
-    source_str = await async_search(query_list, max_search_depth)
+    source_str = await async_search(query_list, top_k)
     pinecone = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
     index = pinecone.IndexAsyncio(host=os.getenv("PINECONE_HOST", ""))
     embeddings = HuggingFaceEmbeddings(
