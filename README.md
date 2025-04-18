@@ -9,4 +9,4 @@ Interview preparation process is very intimidating and daunting, particularly fo
 
 ## Architecture
 
-![alt text](https://www.mermaidchart.com/raw/5ecbc72f-15a7-4594-9e49-1a3654dd6488?theme=light&version=v0.1&format=svg)
+![alt text](https://www.mermaidchart.com/raw/2b4265e0-286e-4746-81a9-83a535129890?theme=light&version=v0.1&format=svg)
