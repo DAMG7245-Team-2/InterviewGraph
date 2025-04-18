@@ -1,4 +1,5 @@
 from typing import Literal
+from pathlib import Path
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -64,12 +65,13 @@ async def is_valid_job_description(
 
 async def generate_question(state: State, config: RunnableConfig):
     """Analyze the job description and return a list of questions."""
+    # Get the project root directory (4 levels up from this file)
+    project_root = Path(__file__).parent.parent.parent.parent
+    sql_mcp_path = project_root / "sql_mcp.py"
+
     server_params = StdioServerParameters(
         command="python",
-        # Make sure to update to the full absolute path to your math_server.py file
-        args=[
-            "/Users/ashishnevan/Documents/NEU/INFO7245/Assignments/InterviewGraph/backend/sql_mcp.py"
-        ],
+        args=[str(sql_mcp_path)],
     )
     model = ChatOpenAI(model="gpt-4o-mini")
     num_questions = 5
