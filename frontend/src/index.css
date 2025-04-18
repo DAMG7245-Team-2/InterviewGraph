@@ -118,3 +118,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  #report-markdown {
+    box-shadow: none !important;
+    background: white !important;
+  }
+}
