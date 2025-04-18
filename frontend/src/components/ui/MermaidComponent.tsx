@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 
 const MermaidComponent = ({ children }: { children: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   useEffect(() => {
     mermaid.initialize({
@@ -52,9 +53,30 @@ const MermaidComponent = ({ children }: { children: string }) => {
     }
   }, [children]);
 
+  const handleZoomToggle = () => {
+    setIsZoomed(!isZoomed);
+  };
+
   return (
-    <div className="w-full flex justify-center items-center">
-      <div ref={containerRef} className="overflow-x-auto" />
+    <div
+      className={`w-full flex justify-center items-center ${isZoomed ? 'fixed inset-0 z-50 bg-black/80 p-4' : ''}`}
+      onClick={isZoomed ? handleZoomToggle : undefined}
+    >
+      <div
+        ref={containerRef}
+        className={`overflow-x-auto ${isZoomed ? 'bg-white rounded-xl shadow-xl p-4 max-w-6xl w-full max-h-[90vh]' : ''} ${!isZoomed ? 'cursor-zoom-in' : ''}`}
+        onClick={(e) => {
+          if (!isZoomed) {
+            e.stopPropagation();
+            handleZoomToggle();
+          }
+        }}
+      />
+      {isZoomed && (
+        <p className="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-sm text-gray-300">
+          Click anywhere to close
+        </p>
+      )}
     </div>
   );
 };
