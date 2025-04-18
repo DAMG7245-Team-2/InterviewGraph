@@ -41,7 +41,7 @@ export default function InterviewPrep() {
         try {
           const errorData = JSON.parse(responseBody);
           if (errorData && Array.isArray(errorData.detail)) {
-            errorMsg = errorData.detail.map((err: { msg: any; }) => err.msg).join(', ');
+            errorMsg = errorData.detail.map((err: { msg: any }) => err.msg).join(', ');
           } else if (errorData?.detail) {
             errorMsg = errorData.detail;
           } else if (errorData?.message) {
@@ -68,15 +68,10 @@ export default function InterviewPrep() {
   };
 
   const handleScrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   useEffect(() => {
-    const toggleVisibility = () => {
-      setShowTop(window.scrollY > 500);
-    };
+    const toggleVisibility = () => setShowTop(window.scrollY > 500);
     window.addEventListener('scroll', toggleVisibility);
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
@@ -105,6 +100,7 @@ export default function InterviewPrep() {
           This AI agent analyzes your job description and provides a focused preparation report tailored for your upcoming mock interview.
         </p>
 
+        {/* Job Description Input + Submit Button */}
         <div className="flex flex-col space-y-2">
           <label htmlFor="desc" className="text-md font-medium text-gray-800">
             Job Description
@@ -123,8 +119,25 @@ export default function InterviewPrep() {
             placeholder="Paste your job description here (minimum 50 characters)..."
             className="rounded-xl border-gray-300 shadow-sm text-base bg-white"
           />
+
+          {(hasChangedSinceReport || (!report && !loading)) && (
+            <div className="flex justify-end no-print pt-2">
+              <Button
+                onClick={handleSubmit}
+                disabled={desc.trim().length < 50}
+                className={`px-6 py-2 font-semibold rounded-xl text-base shadow-lg transition-all duration-300 ${
+                  desc.trim().length < 50
+                    ? "bg-gray-300 text-white cursor-not-allowed"
+                    : "bg-black hover:bg-neutral-900 text-white"
+                }`}
+              >
+                Generate Prep Report
+              </Button>
+            </div>
+          )}
         </div>
 
+        {/* Loading State */}
         {loading && !report && !error && (
           <div className="relative flex flex-col items-center justify-center overflow-hidden bg-white/90 backdrop-blur-md rounded-2xl shadow-md p-10 animate-fade-in text-gray-700">
             <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-transparent to-gray-100 opacity-30 animate-pulse-slow z-0" />
@@ -142,65 +155,57 @@ export default function InterviewPrep() {
           </div>
         )}
 
+        {/* Error State */}
         {error && (
           <div className="p-4 border border-red-300 bg-red-50 text-red-700 rounded-lg">
             ⚠️ {error}
           </div>
         )}
 
+        {/* Report View */}
         {report && !error && (
-          <>
-            <div id="report-markdown" className="p-8 bg-white rounded-2xl shadow-md">
-              <ReactMarkdown
-                components={{
-                  code({ node, className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '');
-                    if (match && match[1] === 'mermaid') {
-                      return (
-                        <div className="flex justify-center overflow-x-auto">
-                          <MermaidComponent key={String(children).trim()}>{String(children).trim()}</MermaidComponent>
-                        </div>
-                      );
-                    }
+          <div id="report-markdown" className="p-8 bg-white rounded-2xl shadow-md">
+            <ReactMarkdown
+              components={{
+                code({ node, className, children, ...props }) {
+                  const match = /language-(\w+)/.exec(className || '');
+                  if (match && match[1] === 'mermaid') {
                     return (
-                      <code className={className} {...props}>
-                        {children}
-                      </code>
+                      <div className="flex justify-center overflow-x-auto">
+                        <MermaidComponent key={String(children).trim()}>{String(children).trim()}</MermaidComponent>
+                      </div>
                     );
-                  },
-                  h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4 text-black" {...props} />,
-                  h2: ({ node, ...props }) => <h2 className="text-2xl font-semibold mt-5 mb-3 text-neutral-800" {...props} />,
-                  h3: ({ node, ...props }) => <h3 className="text-xl font-medium mt-4 mb-2 text-neutral-700" {...props} />,
-                  p: ({ node, ...props }) => <p className="text-gray-800 leading-relaxed mb-4" {...props} />,
-                  ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-4 text-gray-800" {...props} />,
-                  ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-4 text-gray-800" {...props} />,
-                  li: ({ node, ...props }) => <li className="mb-2" {...props} />,
-                  a: ({ node, ...props }) => <a className="text-blue-600 underline hover:text-blue-800" target="_blank" rel="noopener noreferrer" {...props} />,
-                }}
-                remarkPlugins={[remarkGfm, remarkBreaks]}
-              >
-                {report}
-              </ReactMarkdown>
-            </div>
-          </>
-        )}
-
-        {(hasChangedSinceReport || (!report && !loading)) && (
-          <div className="flex justify-end no-print">
-            <Button
-              onClick={handleSubmit}
-              disabled={desc.trim().length < 50}
-              className={`px-6 py-2 font-semibold rounded-xl text-base shadow-lg transition-all duration-300 ${
-                desc.trim().length < 50
-                  ? "bg-gray-300 text-white cursor-not-allowed"
-                  : "bg-black hover:bg-neutral-900 text-white"
-              }`}
+                  }
+                  return (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  );
+                },
+                h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4 text-black" {...props} />,
+                h2: ({ node, ...props }) => <h2 className="text-2xl font-semibold mt-5 mb-3 text-neutral-800" {...props} />,
+                h3: ({ node, ...props }) => <h3 className="text-xl font-medium mt-4 mb-2 text-neutral-700" {...props} />,
+                p: ({ node, ...props }) => <p className="text-gray-800 leading-relaxed mb-4" {...props} />,
+                ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-4 text-gray-800" {...props} />,
+                ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-4 text-gray-800" {...props} />,
+                li: ({ node, ...props }) => <li className="mb-2" {...props} />,
+                a: ({ node, ...props }) => (
+                  <a
+                    className="text-blue-600 underline hover:text-blue-800"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...props}
+                  />
+                ),
+              }}
+              remarkPlugins={[remarkGfm, remarkBreaks]}
             >
-              Generate Prep Report
-            </Button>
+              {report}
+            </ReactMarkdown>
           </div>
         )}
 
+        {/* Floating Buttons */}
         {showTop && (
           <>
             <button
