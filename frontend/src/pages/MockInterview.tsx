@@ -7,13 +7,7 @@ import jsPDF from "jspdf";
 import { useNavigate, useLocation } from "react-router-dom";
 import "@/styles/animated-gradient.css";
 
-const mockQuestions = [
-  "Tell me about yourself.",
-  "Why are you interested in this role?",
-  "What are your strengths and weaknesses?",
-  "Describe a challenge you faced and how you handled it.",
-  "Where do you see yourself in five years?"
-];
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const DEFAULT_VOICES = [
   { id: "EXAVITQu4vr4xnSDxMaL", label: "Rachel" },
@@ -29,62 +23,86 @@ function formatTime(seconds: number) {
 }
 
 export default function MockInterview() {
-  const jobDescription = localStorage.getItem("jobDescription") || "";
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [responses, setResponses] = useState(() => JSON.parse(localStorage.getItem("responses") || "[]") || Array(mockQuestions.length).fill(""));
-  const [currentIndex, setCurrentIndex] = useState(() => Number(localStorage.getItem("currentIndex")) || 0);
+  const [jobDescription] = useState(() => localStorage.getItem("job_description") || "");
+  const [threadId] = useState(() => localStorage.getItem("thread_id") || "");
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [responses, setResponses] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [showTextarea, setShowTextarea] = useState(false);
-  const [feedback, setFeedback] = useState(() => localStorage.getItem("feedback") || "");
-  const [completed, setCompleted] = useState(() => localStorage.getItem("completed") === "true");
+  const [feedback, setFeedback] = useState("");
+  const [completed, setCompleted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceId, setVoiceId] = useState(DEFAULT_VOICES[0].id);
-  const [elapsedTime, setElapsedTime] = useState(() => Number(localStorage.getItem("elapsedTime")) || 0);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasPlayedRef = useRef(false);
+  const hasStartedRef = useRef(false);
 
   useEffect(() => {
-    if (location.state?.fromJobDescription) {
-      localStorage.clear();
-      setResponses(Array(mockQuestions.length).fill(""));
-      setCurrentIndex(0);
-      setShowTextarea(false);
-      setFeedback("");
-      setCompleted(false);
-      setElapsedTime(0);
-      stopRecognition();
-      window.history.replaceState({}, document.title);
+    if (
+      location.state?.fromJobDescription &&
+      questions.length === 0 &&
+      !hasStartedRef.current
+    ) {
+      hasStartedRef.current = true;
+      fetchNext("START");
     }
   }, [location]);
 
   useEffect(() => {
-    let timer: string | number | NodeJS.Timeout | undefined;
+    let timer: ReturnType<typeof setInterval>;
     if (!completed) {
-      timer = setInterval(() => {
-        setElapsedTime((prev) => {
-          const newTime = prev + 1;
-          localStorage.setItem("elapsedTime", newTime.toString());
-          return newTime;
-        });
-      }, 1000);
+      timer = setInterval(() => setElapsedTime((prev) => prev + 1), 1000);
     }
     return () => clearInterval(timer);
   }, [completed]);
 
-  useEffect(() => {
-    localStorage.setItem("responses", JSON.stringify(responses));
-    localStorage.setItem("currentIndex", currentIndex.toString());
-    localStorage.setItem("feedback", feedback);
-    localStorage.setItem("completed", completed.toString());
-  }, [responses, currentIndex, feedback, completed]);
+  const fetchNext = async (message: string) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/interview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, thread_id: threadId }),
+      });
+      const data = await res.json();
 
-  const currentResponse = responses[currentIndex]?.trim();
+      if (res.status === 418 || data.message === "Please provide a valid job description") {
+        alert("Please provide a valid job description.");
+        navigate("/");
+        return;
+      }
+
+      if (data.feedback) {
+        setCompleted(true);
+        setFeedback(data.feedback.map((f: any) => f.feedback).join("\n\n"));
+        setLoading(false);
+        return;
+      }
+
+      if (!data.message || data.message === "Interview complete") return;
+
+      if (data.message !== questions[questions.length - 1]) {
+        setQuestions((prev) => [...prev, data.message]);
+        setResponses((prev) => [...prev, ""]);
+        setCurrentIndex((prev) => prev + 1);
+      }
+    } catch (err) {
+      console.error("Error fetching question:", err);
+      setLoading(false);
+    }
+  };
+
+  const currentResponse = responses[currentIndex - 1]?.trim();
+  const currentQuestion = questions[currentIndex - 1] || "";
 
   const handleResponseChange = (value: string) => {
     const updated = [...responses];
-    updated[currentIndex] = value;
+    updated[currentIndex - 1] = value;
     setResponses(updated);
   };
 
@@ -98,80 +116,40 @@ export default function MockInterview() {
 
   const handleNext = () => {
     stopRecognition();
-    if (currentIndex < mockQuestions.length - 1) {
-      setShowTextarea(false);
-      setCurrentIndex(currentIndex + 1);
-      hasPlayedRef.current = false;
-    } else {
-      setCompleted(true);
-      setFeedback("Great job! You answered all questions confidently. Improve time management slightly.");
-    }
-  };
-
-  const restartInterview = () => {
-    localStorage.clear();
-    setResponses(Array(mockQuestions.length).fill(""));
-    setCurrentIndex(0);
     setShowTextarea(false);
-    setFeedback("");
-    setCompleted(false);
-    setElapsedTime(0);
-    stopRecognition();
-  };
+    hasPlayedRef.current = false;
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Mock Interview Review", 20, 20);
-    doc.setFontSize(12);
-    doc.text(`Total Time: ${formatTime(elapsedTime)}`, 20, 30);
-    doc.text(`\nJob Description:`, 20, 40);
-    doc.text(doc.splitTextToSize(jobDescription, 170), 20, 50);
+    const responseToSend = responses[currentIndex - 1]?.trim() || "Skipped";
 
-    let y = 60 + doc.splitTextToSize(jobDescription, 170).length * 7;
+    // Show loading spinner if it's the final answer
+    if (currentIndex === 5) {
+      setLoading(true);
+    }
 
-    doc.text(`\nFeedback: ${feedback}`, 20, y);
-    y += 15;
-
-    mockQuestions.forEach((q, i) => {
-      const answer = responses[i]?.trim() || "Skipped";
-      doc.text(`Q${i + 1}: ${q}`, 20, y);
-      doc.text(`A: ${answer}`, 20, y + 7);
-      y += 15;
-    });
-
-    doc.save("mock_interview_review.pdf");
+    fetchNext(responseToSend);
   };
 
   const playWithElevenLabs = async (text: string) => {
     try {
-      const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
-      const response = await fetch(url, {
+      const response = await fetch(`${BACKEND_URL}/tts`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "xi-api-key": ELEVENLABS_API_KEY,
-        },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_monolingual_v1",
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice_id: voiceId }),
       });
       const audioBlob = await response.blob();
       const audioURL = URL.createObjectURL(audioBlob);
       new Audio(audioURL).play();
     } catch (err) {
-      console.error("ElevenLabs error:", err);
+      console.error("TTS error:", err);
     }
   };
 
   useEffect(() => {
-    if (!completed && !hasPlayedRef.current) {
-      playWithElevenLabs(mockQuestions[currentIndex]);
+    if (!completed && !hasPlayedRef.current && currentQuestion) {
+      playWithElevenLabs(currentQuestion);
       hasPlayedRef.current = true;
     }
-  }, [currentIndex, completed]);
+  }, [currentQuestion]);
 
   const handleStartVoice = () => {
     setShowTextarea(true);
@@ -182,7 +160,7 @@ export default function MockInterview() {
     recognition.lang = "en-US";
     recognition.interimResults = true;
     recognition.continuous = true;
-    let accumulated = responses[currentIndex] || "";
+    let accumulated = responses[currentIndex - 1] || "";
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
@@ -200,6 +178,45 @@ export default function MockInterview() {
   };
 
   const handleStopVoice = () => stopRecognition();
+
+  const restartInterview = () => {
+    setResponses([]);
+    setQuestions([]);
+    setCurrentIndex(0);
+    setShowTextarea(false);
+    setFeedback("");
+    setCompleted(false);
+    setElapsedTime(0);
+    setLoading(false);
+    stopRecognition();
+    hasStartedRef.current = true;
+    fetchNext("START");
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Mock Interview Review", 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Total Time: ${formatTime(elapsedTime)}`, 20, 30);
+    doc.text("Job Description:", 20, 40);
+    const wrappedDesc = doc.splitTextToSize(jobDescription, 170);
+    doc.text(wrappedDesc, 20, 50);
+    let y = 50 + wrappedDesc.length * 7;
+
+    doc.text(`Feedback: ${feedback}`, 20, y);
+    y += 15;
+
+    questions.forEach((q, i) => {
+      const answer = responses[i]?.trim() || "Skipped";
+      doc.text(`Q${i + 1}: ${q}`, 20, y);
+      y += 7;
+      doc.text(`A: ${answer}`, 20, y);
+      y += 10;
+    });
+
+    doc.save("mock_interview_review.pdf");
+  };
 
   return (
     <div className="animated-gradient min-h-screen text-gray-800 flex flex-col items-center justify-start p-10">
@@ -221,54 +238,74 @@ export default function MockInterview() {
           </select>
         </div>
 
-        {!completed ? (
+        {!completed && !loading ? (
           <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="rounded-2xl shadow-lg p-10 bg-white/90 backdrop-blur-md space-y-6"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-xl font-medium text-gray-700 leading-relaxed">
-                  {mockQuestions[currentIndex]}
-                </p>
-                <Volume2 className="w-5 h-5 text-[#ba68c8] cursor-pointer" onClick={() => playWithElevenLabs(mockQuestions[currentIndex])} />
-              </div>
-              {showTextarea && (
-                <Textarea
-                  value={responses[currentIndex] || ""}
-                  onChange={(e) => handleResponseChange(e.target.value)}
-                  placeholder="Type your response here..."
-                  rows={6}
-                  className="rounded-lg border-gray-300 shadow-sm"
-                />
-              )}
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-center space-x-4">
-                  <Button variant="ghost" className="text-[#ba68c8] hover:text-[#ab47bc]" onClick={() => setShowTextarea(true)}>
-                    <Keyboard className="mr-2" /> Answer by typing
-                  </Button>
-                  {!isListening ? (
-                    <Button variant="ghost" className="text-[#ba68c8] hover:text-[#ab47bc]" onClick={handleStartVoice}>
-                      <Mic className="mr-2" /> Answer by voice
-                    </Button>
-                  ) : (
-                    <Button variant="ghost" className="text-red-600 hover:text-red-700" onClick={handleStopVoice}>
-                      <Square className="mr-2" /> Stop recording
-                    </Button>
-                  )}
+            {currentQuestion && (
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="rounded-2xl shadow-lg p-10 bg-white/90 backdrop-blur-md space-y-6"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-xl font-medium text-gray-700 leading-relaxed">
+                    {currentQuestion}
+                  </p>
+                  <Volume2 className="w-5 h-5 text-[#ba68c8] cursor-pointer" onClick={() => playWithElevenLabs(currentQuestion)} />
                 </div>
-                {isListening && <div className="text-sm text-purple-500">🎙️ Listening...</div>}
-              </div>
-              <div className="flex justify-end space-x-4 pt-2">
-                <Button variant="outline" onClick={handleNext} className="text-gray-700 border-gray-300">Skip</Button>
-                <Button onClick={handleNext} disabled={!currentResponse} className={`px-5 py-2 font-medium rounded-md shadow-md transition-colors duration-300 ${currentResponse ? "bg-[#f8bbd0] hover:bg-[#f48fb1] text-gray-800" : "bg-gray-200 text-white cursor-not-allowed"}`}>Next</Button>
-              </div>
-            </motion.div>
+                {showTextarea && (
+                  <Textarea
+                    value={responses[currentIndex - 1] || ""}
+                    onChange={(e) => handleResponseChange(e.target.value)}
+                    placeholder="Type your response here..."
+                    rows={6}
+                    className="rounded-lg border-gray-300 shadow-sm"
+                  />
+                )}
+                <div className="flex flex-col space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <Button variant="ghost" className="text-[#ba68c8] hover:text-[#ab47bc]" onClick={() => setShowTextarea(true)}>
+                      <Keyboard className="mr-2" /> Answer by typing
+                    </Button>
+                    {!isListening ? (
+                      <Button variant="ghost" className="text-[#ba68c8] hover:text-[#ab47bc]" onClick={handleStartVoice}>
+                        <Mic className="mr-2" /> Answer by voice
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" className="text-red-600 hover:text-red-700" onClick={handleStopVoice}>
+                        <Square className="mr-2" /> Stop recording
+                      </Button>
+                    )}
+                  </div>
+                  {isListening && <div className="text-sm text-purple-500">🎙️ Listening...</div>}
+                </div>
+                <div className="flex justify-end space-x-4 pt-2">
+                  <Button variant="outline" onClick={handleNext} className="text-gray-700 border-gray-300">Skip</Button>
+                  <Button onClick={handleNext} disabled={!currentResponse} className={`px-5 py-2 font-medium rounded-md shadow-md transition-colors duration-300 ${currentResponse ? "bg-[#f8bbd0] hover:bg-[#f48fb1] text-gray-800" : "bg-gray-200 text-white cursor-not-allowed"}`}>Next</Button>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
+        ) : loading ? (
+          <div className="relative flex flex-col items-center justify-center overflow-hidden bg-white/90 backdrop-blur-md rounded-2xl shadow-md p-10 animate-fade-in text-gray-700">
+            {/* Soft animated background blur */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-200 via-transparent to-pink-100 opacity-30 animate-pulse-slow z-0" />
+        
+            {/* Foreground content */}
+            <div className="relative z-10 flex flex-col items-center space-y-4 text-center">
+              <p className="text-xl font-medium animate-pulse">Analyzing your responses…</p>
+              <div className="flex space-x-2 mt-1">
+                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" />
+              </div>
+              <p className="text-sm text-gray-500 max-w-md">
+                Our AI is preparing personalized feedback for you. This won’t take long.
+              </p>
+            </div>
+          </div>
         ) : (
           <div className="space-y-6 w-full">
             <div className="p-6 border-l-4 border-[#f8bbd0] bg-white/90 backdrop-blur-md rounded-2xl shadow-md">
@@ -277,10 +314,10 @@ export default function MockInterview() {
             </div>
             <div className="p-6 border bg-white/90 backdrop-blur-md rounded-xl shadow space-y-4">
               <h2 className="text-lg font-semibold text-gray-700">Review Your Interview</h2>
-              {mockQuestions.map((q, idx) => (
+              {questions.map((q, idx) => (
                 <div key={idx} className="border-t pt-3">
                   <p className="font-medium">Q{idx + 1}. {q}</p>
-                  <p className="text-sm mt-1 text-gray-700">{responses[idx]?.trim() ? responses[idx] : <span className="italic text-red-500">Skipped</span>}</p>
+                  <p className="text-sm mt-1 text-gray-700">{responses[idx]?.trim() || <span className="italic text-red-500">Skipped</span>}</p>
                 </div>
               ))}
             </div>

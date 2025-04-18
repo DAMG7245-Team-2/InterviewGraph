@@ -1,15 +1,20 @@
+import logging
+import os
 from typing import List
 import uuid
-import logging
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Response
-from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+import httpx
 from interview_agent.graph import graph_with_checkpoint as interview_agent_graph
 from interview_agent.state import Feedback
 from langgraph.types import Command
 from prep_agent.graph import graph as prep_agent_graph
 from pydantic import BaseModel, Field
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -32,20 +37,21 @@ class UserInput(BaseModel):
         default=None,
     )
 
-
 class PrepInput(BaseModel):
     job_description: str = Field(description="Job description", min_length=50)
-
 
 class InterviewResponse(BaseModel):
     message: str = Field(description="Output from the interview")
     feedback: List[Feedback] | None = Field(description="Feedback from the interview")
 
+class TTSInput(BaseModel):
+    text: str
+    voice_id: str
+
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-
 
 @app.get("/health")
 async def health():
@@ -124,3 +130,37 @@ async def invoke_prep(prep_input: PrepInput):
     except Exception as e:
         logger.error(f"Error in invoke_prep: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/tts")
+async def text_to_speech(input: TTSInput):
+    ELEVEN_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
+    if not ELEVEN_API_KEY:
+        raise HTTPException(status_code=500, detail="API key not configured")
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://api.elevenlabs.io/v1/text-to-speech/{input.voice_id}",
+                headers={
+                    "Content-Type": "application/json",
+                    "xi-api-key": ELEVEN_API_KEY,
+                },
+                json={
+                    "text": input.text,
+                    "model_id": "eleven_monolingual_v1",
+                    "voice_settings": {
+                        "stability": 0.5,
+                        "similarity_boost": 0.75
+                    },
+                },
+                timeout=30.0
+            )
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+
+        return StreamingResponse(response.aiter_bytes(), media_type="audio/mpeg")
+
+    except Exception as e:
+        logger.error(f"ElevenLabs error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate speech")
