@@ -28,6 +28,7 @@ export default function MockInterview() {
 
   const [jobDescription] = useState(() => localStorage.getItem("job_description") || "");
   const [threadId] = useState(() => localStorage.getItem("thread_id") || "");
+  const [nQuestions] = useState(() => parseInt(localStorage.getItem("n_questions") || "5"));
   const [questions, setQuestions] = useState<string[]>([]);
   const [responses, setResponses] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -69,6 +70,7 @@ export default function MockInterview() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, thread_id: threadId }),
       });
+
       const data = await res.json();
 
       if (res.status === 418 || data.message === "Please provide a valid job description") {
@@ -77,16 +79,14 @@ export default function MockInterview() {
         return;
       }
 
-      if (data.feedback) {
-        setCompleted(true);
+      if (data.message === "Interview complete" && data.feedback) {
         setLoading(false);
+        setCompleted(true);
         setFeedbackList(data.feedback);
         return;
       }
 
-      if (!data.message || data.message === "Interview complete") return;
-
-      if (data.message !== questions[questions.length - 1]) {
+      if (data.message && data.message !== questions[questions.length - 1]) {
         setQuestions((prev) => [...prev, data.message]);
         setResponses((prev) => [...prev, ""]);
         setCurrentIndex((prev) => prev + 1);
@@ -119,7 +119,13 @@ export default function MockInterview() {
     setShowTextarea(false);
     hasPlayedRef.current = false;
     const responseToSend = responses[currentIndex - 1]?.trim() || "Skipped";
-    if (currentIndex === 5) setLoading(true);
+  
+    const isLastQuestion = currentIndex === nQuestions;
+  
+    if (isLastQuestion) {
+      setLoading(true);
+    }
+  
     fetchNext(responseToSend);
   };
 
@@ -173,19 +179,19 @@ export default function MockInterview() {
 
   const handleStopVoice = () => stopRecognition();
 
-  const restartInterview = () => {
-    setResponses([]);
-    setQuestions([]);
-    setCurrentIndex(0);
-    setShowTextarea(false);
-    setFeedbackList([]);
-    setCompleted(false);
-    setElapsedTime(0);
-    setLoading(false);
-    stopRecognition();
-    hasStartedRef.current = true;
-    fetchNext("START");
-  };
+  // const restartInterview = () => {
+  //   setResponses([]);
+  //   setQuestions([]);
+  //   setCurrentIndex(0);
+  //   setShowTextarea(false);
+  //   setFeedbackList([]);
+  //   setCompleted(false);
+  //   setElapsedTime(0);
+  //   setLoading(false);
+  //   stopRecognition();
+  //   hasStartedRef.current = true;
+  //   fetchNext("START");
+  // };
 
   const exportToPDF = () => {
     const doc = new jsPDF();
@@ -357,7 +363,7 @@ export default function MockInterview() {
             </div>
 
             <div className="flex flex-wrap gap-4 justify-end">
-              <Button onClick={restartInterview} className="bg-gray-200 hover:bg-gray-300 text-gray-800">Restart Interview</Button>
+              {/* <Button onClick={restartInterview} className="bg-gray-200 hover:bg-gray-300 text-gray-800">Restart Interview</Button> */}
               <Button onClick={() => navigate("/interview-job-description")} className="bg-[#f3e5f5] hover:bg-[#e1bee7] text-[#6a1b9a]">Change Job Description</Button>
               <Button onClick={exportToPDF} className="bg-[#ce93d8] hover:bg-[#ba68c8] text-white">Export as PDF</Button>
             </div>

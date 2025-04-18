@@ -74,7 +74,9 @@ async def generate_question(state: State, config: RunnableConfig):
         args=[str(sql_mcp_path)],
     )
     model = ChatOpenAI(model="gpt-4o-mini")
-    num_questions = 5
+    my_config = Configuration.from_runnable_config(config)
+    num_questions = my_config.number_of_questions
+
 
     def generate_question_message(job_description: str, num_questions: int):
         return f"You are an interviewer. You will be crafting questions for a phone interview using the tool 'sql_tool'. The tool is a database of interview questions and answers. Generate a list of {num_questions} possible interview questions based on the job description provided. \n Job Description: {job_description}"
@@ -114,7 +116,7 @@ async def wait_for_user_input(
     state: State, config: RunnableConfig
 ) -> Command[Literal["human_node", "wait_for_user_input_node"]]:
     """Wait for the user to start the interview."""
-    user_input = interrupt(WAIT_FOR_USER_INTERRUPT_MESSAGE)
+    user_input = interrupt(f"{len(state['qa_list'])}")
     if user_input == START_INTERVIEW:
         return Command(goto="human_node")
     else:

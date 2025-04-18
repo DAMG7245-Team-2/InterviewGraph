@@ -15,25 +15,30 @@ export default function JobDescriptionPage() {
 
   const handleStart = async () => {
     if (!jobDescription.trim()) return;
-
+  
     setLoading(true);
     const threadId = uuidv4();
-
+  
     try {
       const res = await fetch(`${BACKEND_URL}/interview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: jobDescription, thread_id: threadId })
       });
-
+  
       const data = await res.json();
-
+  
       if (
         typeof data?.message === "string" &&
         data.message.toLowerCase().includes("please provide a valid job description")
       ) {
         alert("Please provide a valid job description.");
       } else {
+        const questionCount = parseInt(data.message); // Make sure this is a number
+        console.log("Backend response:", data);
+        if (!isNaN(questionCount)) {
+          localStorage.setItem("n_questions", String(questionCount));
+        }
         localStorage.setItem("job_description", jobDescription);
         localStorage.setItem("thread_id", threadId);
         navigate("/interview", { state: { fromJobDescription: true } });
