@@ -30,6 +30,20 @@ class AvailableCategories(Enum):
     DATA_STRUCTURES = "Data structures"
     NETWORKS = "Networks"
     DEVOPS = "DevOps"
+    JAVA = "Java"
+    WEB_DEVELOPMENT = "Web Development"
+    SOFTWARE_TESTING = "Software Testing"
+    VERSION_CONTROL = "Version Control"
+    SECURITY = "Security"
+    FRONT_END = "Front-end"
+    BACK_END = "Back-end"
+    MACHINE_LEARNING = "Machine Learning"
+    DISTRIBUTED_SYSTEMS = "Distributed Systems"
+    DATA_ENGINEERING = "Data Engineering"
+    FULL_STACK = "Full-stack"
+    LOW_LEVEL_SYSTEMS = "Low-level Systems"
+    DATABASE_AND_SQL = "Database and SQL"
+    SYSTEM_DESIGN = "System Design"
 
 
 class AvailableDifficulties(Enum):
