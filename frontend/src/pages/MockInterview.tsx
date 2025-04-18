@@ -32,7 +32,7 @@ export default function MockInterview() {
   const [responses, setResponses] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTextarea, setShowTextarea] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const [feedbackList, setFeedbackList] = useState<{ question: string; feedback: string }[]>([]);
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -56,11 +56,13 @@ export default function MockInterview() {
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
-    if (!completed) {
+  
+    if (!completed && !loading) {
       timer = setInterval(() => setElapsedTime((prev) => prev + 1), 1000);
     }
+  
     return () => clearInterval(timer);
-  }, [completed]);
+  }, [completed, loading]);
 
   const fetchNext = async (message: string) => {
     try {
@@ -79,8 +81,16 @@ export default function MockInterview() {
 
       if (data.feedback) {
         setCompleted(true);
-        setFeedback(data.feedback.map((f: any) => f.feedback).join("\n\n"));
         setLoading(false);
+
+        // Update structured feedback
+        setFeedbackList(
+          data.feedback.map((f: any, i: number) => ({
+            question: questions[i],
+            feedback: f.feedback || f, 
+          }))
+        );
+
         return;
       }
 
@@ -121,7 +131,6 @@ export default function MockInterview() {
 
     const responseToSend = responses[currentIndex - 1]?.trim() || "Skipped";
 
-    // Show loading spinner if it's the final answer
     if (currentIndex === 5) {
       setLoading(true);
     }
@@ -184,7 +193,7 @@ export default function MockInterview() {
     setQuestions([]);
     setCurrentIndex(0);
     setShowTextarea(false);
-    setFeedback("");
+    setFeedbackList([]);
     setCompleted(false);
     setElapsedTime(0);
     setLoading(false);
@@ -195,26 +204,52 @@ export default function MockInterview() {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
+    const margin = 20;
+    const lineHeight = 7;
+    const pageHeight = doc.internal.pageSize.height;
+  
     doc.setFontSize(16);
-    doc.text("Mock Interview Review", 20, 20);
+    doc.text("Mock Interview Review", margin, margin);
+  
     doc.setFontSize(12);
-    doc.text(`Total Time: ${formatTime(elapsedTime)}`, 20, 30);
-    doc.text("Job Description:", 20, 40);
-    const wrappedDesc = doc.splitTextToSize(jobDescription, 170);
-    doc.text(wrappedDesc, 20, 50);
-    let y = 50 + wrappedDesc.length * 7;
-
-    doc.text(`Feedback: ${feedback}`, 20, y);
-    y += 15;
-
-    questions.forEach((q, i) => {
-      const answer = responses[i]?.trim() || "Skipped";
-      doc.text(`Q${i + 1}: ${q}`, 20, y);
-      y += 7;
-      doc.text(`A: ${answer}`, 20, y);
-      y += 10;
+    let y = margin + 10;
+  
+    doc.text(`Total Time: ${formatTime(elapsedTime)}`, margin, y);
+    y += lineHeight;
+  
+    doc.text("Job Description:", margin, y);
+    y += lineHeight;
+  
+    const descLines = doc.splitTextToSize(jobDescription, 170);
+    descLines.forEach((line: string | string[]) => {
+      if (y + lineHeight > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.text(line, margin, y);
+      y += lineHeight;
     });
-
+  
+    y += lineHeight;
+  
+    feedbackList.forEach((f, i) => {
+      const questionLines = doc.splitTextToSize(`Q${i + 1}: ${f.question}`, 170);
+      const answer = responses[i]?.trim() || "Skipped";
+      const answerLines = doc.splitTextToSize(`A: ${answer}`, 170);
+      const feedbackLines = doc.splitTextToSize(`Feedback: ${f.feedback}`, 170);
+  
+      [...questionLines, ...answerLines, ...feedbackLines].forEach((line) => {
+        if (y + lineHeight > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.text(line, margin, y);
+        y += lineHeight;
+      });
+  
+      y += lineHeight;
+    });
+  
     doc.save("mock_interview_review.pdf");
   };
 
@@ -290,10 +325,7 @@ export default function MockInterview() {
           </AnimatePresence>
         ) : loading ? (
           <div className="relative flex flex-col items-center justify-center overflow-hidden bg-white/90 backdrop-blur-md rounded-2xl shadow-md p-10 animate-fade-in text-gray-700">
-            {/* Soft animated background blur */}
             <div className="absolute inset-0 bg-gradient-to-br from-purple-200 via-transparent to-pink-100 opacity-30 animate-pulse-slow z-0" />
-        
-            {/* Foreground content */}
             <div className="relative z-10 flex flex-col items-center space-y-4 text-center">
               <p className="text-xl font-medium animate-pulse">Analyzing your responses…</p>
               <div className="flex space-x-2 mt-1">
@@ -310,8 +342,16 @@ export default function MockInterview() {
           <div className="space-y-6 w-full">
             <div className="p-6 border-l-4 border-[#f8bbd0] bg-white/90 backdrop-blur-md rounded-2xl shadow-md">
               <h2 className="text-2xl font-semibold mb-2 text-gray-700">🧠 AI Feedback</h2>
-              <p className="text-base leading-relaxed text-gray-700">{feedback}</p>
+              <div className="space-y-4">
+                {feedbackList.map((f, idx) => (
+                  <div key={idx} className="border-t pt-3">
+                    <p className="font-medium text-gray-800">Q{idx + 1}: {f.question}</p>
+                    <p className="text-sm text-gray-700 mt-1">📝 <span className="font-semibold text-purple-700">Feedback:</span> {f.feedback}</p>
+                  </div>
+                ))}
+              </div>
             </div>
+
             <div className="p-6 border bg-white/90 backdrop-blur-md rounded-xl shadow space-y-4">
               <h2 className="text-lg font-semibold text-gray-700">Review Your Interview</h2>
               {questions.map((q, idx) => (
@@ -321,6 +361,7 @@ export default function MockInterview() {
                 </div>
               ))}
             </div>
+
             <div className="flex flex-wrap gap-4 justify-end">
               <Button onClick={restartInterview} className="bg-gray-200 hover:bg-gray-300 text-gray-800">Restart Interview</Button>
               <Button onClick={() => navigate("/")} className="bg-[#f3e5f5] hover:bg-[#e1bee7] text-[#6a1b9a]">Change Job Description</Button>
