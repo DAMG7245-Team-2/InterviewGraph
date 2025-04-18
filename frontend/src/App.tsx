@@ -5,7 +5,7 @@ import MockInterview from "@/pages/MockInterview";
 function App() {
   return (
     <Routes>
-      <Route path="/job-description" element={<JobDescriptionPage />} />
+      <Route path="/" element={<JobDescriptionPage />} />
       <Route path="/interview" element={<MockInterview />} />
     </Routes>
   );
