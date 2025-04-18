@@ -7,6 +7,8 @@ import jsPDF from "jspdf";
 import { useNavigate, useLocation } from "react-router-dom";
 import "@/styles/animated-gradient.css";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 const mockQuestions = [
   "Tell me about yourself.",
   "Why are you interested in this role?",
@@ -158,24 +160,17 @@ export default function MockInterview() {
 
   const playWithElevenLabs = async (text: string) => {
     try {
-      const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
-      const response = await fetch(url, {
+      const response = await fetch(`${BACKEND_URL}/tts`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "xi-api-key": ELEVENLABS_API_KEY,
-        },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_monolingual_v1",
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice_id: voiceId }),
       });
+  
       const audioBlob = await response.blob();
       const audioURL = URL.createObjectURL(audioBlob);
       new Audio(audioURL).play();
     } catch (err) {
-      console.error("ElevenLabs error:", err);
+      console.error("TTS error:", err);
     }
   };
 
@@ -260,7 +255,7 @@ export default function MockInterview() {
                 />
               )}
               <div className="flex flex-col space-y-4">
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <Button variant="ghost" className="text-[#ba68c8] hover:text-[#ab47bc]" onClick={() => setShowTextarea(true)}>
                     <Keyboard className="mr-2" /> Answer by typing
                   </Button>
