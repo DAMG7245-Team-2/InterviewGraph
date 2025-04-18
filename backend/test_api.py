@@ -55,7 +55,7 @@ def test_health():
     assert response.json() == {"status": "ok"}
 
 
-def test_prep_happy_path():
+def prep_happy_path():
     response = client.post(
         "/prep",
         json={"job_description": valid_jd},
@@ -66,7 +66,7 @@ def test_prep_happy_path():
     assert len(response_content) > 1000
 
 
-def test_prep_invalid_job_description():
+def prep_invalid_job_description():
     response = client.post(
         "/prep",
         json={"job_description": "This is a test job description" * 10},
@@ -89,7 +89,7 @@ def test_prep_empty_job_description():
     assert response.status_code == 422
 
 
-def test_interview_happy_path():
+def interview_happy_path():
     thread_id = str(uuid.uuid4())
     response = client.post(
         "/interview",
@@ -179,7 +179,7 @@ def test_interview_happy_path():
     """
 
 
-def test_interview_invalid_job_description():
+def interview_invalid_job_description():
     thread_id = str(uuid.uuid4())
     response = client.post(
         "/interview",
