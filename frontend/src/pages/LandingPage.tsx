@@ -20,7 +20,7 @@ export default function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 animate-fade-in delay-[200ms]">
-          <div className="p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl text-left space-y-4 border border-purple-100 transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-200 hover:shadow-2xl hover:shadow-purple-200">
+          <div className="p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl text-left space-y-4 border border-purple-100 transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-200">
             <div className="flex items-center gap-3 text-purple-600">
               <Mic className="w-6 h-6" />
               <h2 className="text-2xl font-semibold">Mock Interview</h2>
@@ -36,7 +36,7 @@ export default function LandingPage() {
             </Button>
           </div>
 
-          <div className="p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl text-left space-y-4 border border-emerald-100 transform transition-transform duration-300 hover:scale-105">
+          <div className="p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl text-left space-y-4 border border-emerald-100 transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-200">
             <div className="flex items-center gap-3 text-emerald-600">
               <NotebookText className="w-6 h-6" />
               <h2 className="text-2xl font-semibold">Interview Prep</h2>
