@@ -17,6 +17,7 @@ export default function InterviewPrep() {
   const [loading, setLoading] = useState(false);
   const [showTop, setShowTop] = useState(false);
   const [hasChangedSinceReport, setHasChangedSinceReport] = useState(false);
+  const [selectedDiagram, setSelectedDiagram] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
@@ -28,9 +29,7 @@ export default function InterviewPrep() {
 
       const res = await fetch(`${BACKEND_URL}/prep`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ job_description: desc }),
       });
 
@@ -100,7 +99,6 @@ export default function InterviewPrep() {
           This AI agent analyzes your job description and provides a focused preparation report tailored for your upcoming mock interview.
         </p>
 
-        {/* Job Description Input + Submit Button */}
         <div className="flex flex-col space-y-2">
           <label htmlFor="desc" className="text-md font-medium text-gray-800">
             Job Description
@@ -137,7 +135,6 @@ export default function InterviewPrep() {
           )}
         </div>
 
-        {/* Loading State */}
         {loading && !report && !error && (
           <div className="relative flex flex-col items-center justify-center overflow-hidden bg-white/90 backdrop-blur-md rounded-2xl shadow-md p-10 animate-fade-in text-gray-700">
             <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-transparent to-gray-100 opacity-30 animate-pulse-slow z-0" />
@@ -155,14 +152,12 @@ export default function InterviewPrep() {
           </div>
         )}
 
-        {/* Error State */}
         {error && (
           <div className="p-4 border border-red-300 bg-red-50 text-red-700 rounded-lg">
             ⚠️ {error}
           </div>
         )}
 
-        {/* Report View */}
         {report && !error && (
           <div id="report-markdown" className="p-8 bg-white rounded-2xl shadow-md">
             <ReactMarkdown
@@ -172,7 +167,7 @@ export default function InterviewPrep() {
                   if (match && match[1] === 'mermaid') {
                     return (
                       <div className="flex justify-center overflow-x-auto">
-                        <MermaidComponent key={String(children).trim()}>{String(children).trim()}</MermaidComponent>
+                        <MermaidComponent>{String(children).trim()}</MermaidComponent>
                       </div>
                     );
                   }
@@ -205,7 +200,21 @@ export default function InterviewPrep() {
           </div>
         )}
 
-        {/* Floating Buttons */}
+        {selectedDiagram && (
+          <div
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+            onClick={() => setSelectedDiagram(null)}
+          >
+            <div
+              className="bg-white rounded-xl shadow-xl p-4 max-w-6xl w-full max-h-[90vh] overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MermaidComponent>{selectedDiagram}</MermaidComponent>
+              <p className="text-center text-sm text-gray-500 mt-2">Click outside to close</p>
+            </div>
+          </div>
+        )}
+
         {showTop && (
           <>
             <button
@@ -214,7 +223,6 @@ export default function InterviewPrep() {
             >
               <Printer className="w-5 h-5" />
             </button>
-
             <button
               onClick={handleScrollTop}
               className="fixed bottom-6 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-neutral-900 no-print"

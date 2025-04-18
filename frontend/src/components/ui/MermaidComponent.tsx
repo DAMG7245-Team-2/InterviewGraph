@@ -53,7 +53,7 @@ const MermaidComponent = ({ children }: { children: string }) => {
   }, [children]);
 
   return (
-    <div className="w-full flex justify-center items-center">
+    <div className="w-full flex justify-center items-center cursor-zoom-in hover:brightness-105 transition">
       <div ref={containerRef} className="overflow-x-auto" />
     </div>
   );
