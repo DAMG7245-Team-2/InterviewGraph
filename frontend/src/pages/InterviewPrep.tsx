@@ -6,8 +6,6 @@ import remarkBreaks from 'remark-breaks';
 import MermaidComponent from '@/components/ui/MermaidComponent';
 import { Button } from '@/components/ui/button';
 import { Contact, ArrowLeft, ArrowUp, Download } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -67,41 +65,8 @@ export default function InterviewPrep() {
 
   const handleScrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  const exportToPDF = async () => {
-    const node = document.getElementById("report-markdown");
-    if (!node) return;
-
-    try {
-      const canvas = await html2canvas(node, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/png");
-
-      const pdf = new jsPDF("p", "pt", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      const imgProps = {
-        width: canvas.width,
-        height: canvas.height,
-      };
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-      let heightLeft = pdfHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save("interview_prep_report.pdf");
-    } catch (error) {
-      console.error("PDF export failed:", error);
-    }
+  const handlePrint = () => {
+    window.print();
   };
 
   useEffect(() => {
@@ -113,9 +78,9 @@ export default function InterviewPrep() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-r from-yellow-50 via-rose-100 to-teal-100 bg-[length:400%_400%] animate-gradient-x text-gray-800 flex flex-col items-center justify-start p-10">
+    <div className="min-h-screen w-full bg-gradient-to-r from-yellow-50 via-rose-100 to-teal-100 bg-[length:400%_400%] animate-gradient-x text-gray-800 flex flex-col items-center justify-start p-10 print:bg-white">
       <div className="max-w-5xl w-full space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
           <div className="flex items-center gap-3 text-neutral-800">
             <Contact className="w-7 h-7 text-neutral-600" />
             <h1 className="text-4xl font-semibold">Interview Prep Assistant</h1>
@@ -129,7 +94,7 @@ export default function InterviewPrep() {
           </Button>
         </div>
 
-        <p className="text-gray-600 max-w-3xl text-md leading-relaxed">
+        <p className="text-gray-600 max-w-3xl text-md leading-relaxed no-print">
           This AI agent analyzes your job description and provides a focused preparation report tailored for your upcoming mock interview.
         </p>
 
@@ -158,9 +123,9 @@ export default function InterviewPrep() {
 
         {report && !error && (
           <>
-            <div className="flex justify-end -mt-4">
-              <Button onClick={exportToPDF} className="bg-neutral-200 text-neutral-800 hover:bg-neutral-300">
-                <Download className="mr-2 w-4 h-4" /> Export as PDF
+            <div className="flex justify-end -mt-4 no-print">
+              <Button onClick={handlePrint} className="bg-neutral-200 text-neutral-800 hover:bg-neutral-300">
+                <Download className="mr-2 w-4 h-4" /> Print / Save as PDF
               </Button>
             </div>
 
@@ -172,9 +137,9 @@ export default function InterviewPrep() {
                     if (match && match[1] === 'mermaid') {
                       return (
                         <div className="flex justify-center overflow-x-auto">
-                            <MermaidComponent>{String(children).trim()}</MermaidComponent>
-                          </div>);
-
+                          <MermaidComponent>{String(children).trim()}</MermaidComponent>
+                        </div>
+                      );
                     }
                     return (
                       <code className={className} {...props}>
@@ -200,7 +165,7 @@ export default function InterviewPrep() {
         )}
 
         {!report && !loading && (
-          <div className="flex justify-end">
+          <div className="flex justify-end no-print">
             <Button onClick={handleSubmit} className="bg-black hover:bg-neutral-900 text-white px-6 py-2 shadow-lg">
               Generate Prep Report
             </Button>
@@ -210,7 +175,7 @@ export default function InterviewPrep() {
         {showTop && (
           <button
             onClick={handleScrollTop}
-            className="fixed bottom-6 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-neutral-900"
+            className="fixed bottom-6 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-neutral-900 no-print"
           >
             <ArrowUp className="w-5 h-5" />
           </button>

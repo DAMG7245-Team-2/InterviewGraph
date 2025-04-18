@@ -51,11 +51,18 @@ export default function JobDescriptionPage() {
   return (
     <div className="animated-gradient min-h-screen flex items-center justify-center px-4">
       <div className="bg-white shadow-2xl rounded-3xl p-10 max-w-3xl w-full space-y-8 border border-purple-100 backdrop-blur-md bg-opacity-90">
-        <div className="text-center space-y-2">
-          <h1 className="text-5xl font-extrabold text-lavender-600 flex items-center justify-center gap-3">
-            <Sparkles className="w-10 h-10 text-purple-400 animate-pulse" /> Start Your Mock Interview
+        <div className="text-center space-y-3">
+          <h1 className="text-5xl font-extrabold text-black-600 flex items-center justify-center gap-1">
+            <Sparkles className="w-20 h-20 text-purple-400 animate-pulse" />
+            Get Ready for Your Interview
           </h1>
-          <p className="text-gray-600 text-lg">Paste a job description below to generate your personalized mock interview.</p>
+          <p className="text-gray-700 text-lg">
+            Paste a job description below and choose one of the following modes to kickstart your interview preparation journey:
+          </p>
+          <ul className="text-sm text-gray-600 list-disc list-inside">
+            <li><strong>Prep Assistant:</strong> Get a personalized breakdown of what to expect based on the job description.</li>
+            <li><strong>Mock Interview:</strong> Simulate a live AI-powered interview with feedback.</li>
+          </ul>
         </div>
 
         <div className="flex flex-col space-y-2">
@@ -72,7 +79,7 @@ export default function JobDescriptionPage() {
           />
         </div>
 
-        <div className="flex justify-center pt-2">
+        <div className="flex flex-col sm:flex-row sm:justify-center sm:items-center gap-4 pt-2">
           <Button
             onClick={handleStart}
             disabled={isJobDescEmpty || loading}
@@ -109,18 +116,19 @@ export default function JobDescriptionPage() {
                 Validating...
               </div>
             ) : (
-              "Start Interview"
+              "Start Mock Interview"
             )}
           </Button>
-        </div>
 
-        {/* ➕ New: Prep Assistant CTA */}
-        <div className="flex flex-col items-center pt-4 space-y-2">
-          <p className="text-sm text-gray-600">Want to warm up before jumping into the mock interview?</p>
           <Button
             onClick={() => navigate("/prep")}
+            disabled={isJobDescEmpty}
             variant="outline"
-            className="px-6 py-2 text-sm rounded-xl border border-purple-200 text-purple-700 hover:bg-purple-50 transition"
+            className={`px-6 py-3 font-semibold rounded-xl text-base border ${
+              isJobDescEmpty
+                ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                : 'border-purple-300 text-purple-700 hover:bg-purple-50'
+            }`}
           >
             Go to Prep Assistant
           </Button>
