@@ -16,7 +16,7 @@ def get_question(difficulty: str):
         "question": question,
         "stdin": test_input,
         "stdout": expected_output,
-        #"solution": solution,
+        "solution": solution,
     }
 
 
