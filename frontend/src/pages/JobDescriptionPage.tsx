@@ -113,6 +113,18 @@ export default function JobDescriptionPage() {
             )}
           </Button>
         </div>
+
+        {/* ➕ New: Prep Assistant CTA */}
+        <div className="flex flex-col items-center pt-4 space-y-2">
+          <p className="text-sm text-gray-600">Want to warm up before jumping into the mock interview?</p>
+          <Button
+            onClick={() => navigate("/prep")}
+            variant="outline"
+            className="px-6 py-2 text-sm rounded-xl border border-purple-200 text-purple-700 hover:bg-purple-50 transition"
+          >
+            Go to Prep Assistant
+          </Button>
+        </div>
       </div>
     </div>
   );
