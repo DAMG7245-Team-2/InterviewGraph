@@ -1,41 +1,45 @@
-name: 'Deploy to Cloud Run from Source'
+name: "Deploy to Cloud Run from Source"
 
 on:
   push:
     branches: ["main"]
+  # workflow_run:
+  #   workflows: "Test"
+  #   types:
+  #     - completed
 
 env:
-  PROJECT_ID: '${{ secrets.GCP_PROJECT_ID }}'
-  REGION: '${{ secrets.GCP_REGION }}'
-  SERVICE: 'ig-service'
+  PROJECT_ID: "${{ secrets.GCP_PROJECT_ID }}"
+  REGION: "${{ secrets.GCP_REGION }}"
+  SERVICE: "ig-service"
 
 jobs:
   deploy:
-    runs-on: 'ubuntu-latest'
+    runs-on: "ubuntu-latest"
 
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
 
     steps:
-      - name: 'Checkout'
-        uses: 'actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332' # actions/checkout@v4
+      - name: "Checkout"
+        uses: "actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332" # actions/checkout@v4
 
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+      - id: "auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v2"
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
 
-      - name: 'Deploy to Cloud Run'
-        uses: 'google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17' # google-github-actions/deploy-cloudrun@v2
+      - name: "Deploy to Cloud Run"
+        uses: "google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17" # google-github-actions/deploy-cloudrun@v2
         with:
-          service: '${{ env.SERVICE }}'
-          region: '${{ env.REGION }}'
+          service: "${{ env.SERVICE }}"
+          region: "${{ env.REGION }}"
           # NOTE: If using a different source folder, update the image name below:
-          source: './'
+          source: "./"
 
       # If required, use the Cloud Run URL output in later steps
-      - name: 'Show output'
+      - name: "Show output"
         run: |-
           echo ${{ steps.deploy.outputs.url }}

@@ -7,3 +7,9 @@ feedback_prompt = """You are an expert technical quizzer, You are given the ques
 Based on this information, generate feedback for the user.
 The feedback should include a similarity score between the expected answer and the given answer, and a brief explanation of the score. The feedback should be in the format:
 "similarity": <similarity_score>, "feedback": <feedback>"""
+
+START_INTERVIEW = "START"
+
+WAIT_FOR_USER_INTERRUPT_MESSAGE = (
+    f"say {START_INTERVIEW} when you are ready to start the interview"
+)
