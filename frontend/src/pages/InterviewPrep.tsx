@@ -5,19 +5,22 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import MermaidComponent from '@/components/ui/MermaidComponent';
 import { Button } from '@/components/ui/button';
-import { Contact, ArrowLeft, ArrowUp, Download } from 'lucide-react';
+import { Contact, ArrowUp, Printer } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function InterviewPrep() {
-  const [desc] = useState(() => localStorage.getItem("job_description") || "");
+  const [desc, setDesc] = useState("");
   const [report, setReport] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showTop, setShowTop] = useState(false);
+  const [hasChangedSinceReport, setHasChangedSinceReport] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    if (desc.trim().length < 50) return;
     try {
       setError("");
       setReport("");
@@ -56,6 +59,7 @@ export default function InterviewPrep() {
       if (!jsonData.final_report) throw new Error("Invalid response - missing final_report");
 
       setReport(jsonData.final_report);
+      setHasChangedSinceReport(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Server error - please try again later");
     } finally {
@@ -78,25 +82,48 @@ export default function InterviewPrep() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-r from-yellow-50 via-rose-100 to-teal-100 bg-[length:400%_400%] animate-gradient-x text-gray-800 flex flex-col items-center justify-start p-10 print:bg-white">
+    <div className="min-h-screen w-full bg-gradient-to-r from-yellow-50 via-rose-100 to-teal-100 bg-[length:400%_400%] animate-gradient-x text-gray-800 flex flex-col items-center justify-start px-6 py-16 relative">
+      <div className="absolute top-6 left-6 no-print">
+        <Button
+          onClick={() => navigate("/")}
+          variant="ghost"
+          className="text-sm text-gray-600 hover:text-black flex items-center gap-2"
+        >
+          ← Back to Home
+        </Button>
+      </div>
+
       <div className="max-w-5xl w-full space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 text-neutral-800">
             <Contact className="w-7 h-7 text-neutral-600" />
             <h1 className="text-4xl font-semibold">Interview Prep Assistant</h1>
           </div>
-          <Button
-            onClick={() => navigate("/")}
-            variant="ghost"
-            className="text-neutral-700 hover:text-black flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to Home
-          </Button>
         </div>
 
-        <p className="text-gray-600 max-w-3xl text-md leading-relaxed no-print">
+        <p className="text-gray-600 max-w-3xl text-md leading-relaxed">
           This AI agent analyzes your job description and provides a focused preparation report tailored for your upcoming mock interview.
         </p>
+
+        <div className="flex flex-col space-y-2">
+          <label htmlFor="desc" className="text-md font-medium text-gray-800">
+            Job Description
+          </label>
+          <Textarea
+            id="desc"
+            rows={6}
+            value={desc}
+            onChange={(e) => {
+              const newVal = e.target.value;
+              setDesc(newVal);
+              if (report && newVal.trim() !== desc.trim()) {
+                setHasChangedSinceReport(true);
+              }
+            }}
+            placeholder="Paste your job description here (minimum 50 characters)..."
+            className="rounded-xl border-gray-300 shadow-sm text-base bg-white"
+          />
+        </div>
 
         {loading && !report && !error && (
           <div className="relative flex flex-col items-center justify-center overflow-hidden bg-white/90 backdrop-blur-md rounded-2xl shadow-md p-10 animate-fade-in text-gray-700">
@@ -123,12 +150,6 @@ export default function InterviewPrep() {
 
         {report && !error && (
           <>
-            <div className="flex justify-end -mt-4 no-print">
-              <Button onClick={handlePrint} className="bg-neutral-200 text-neutral-800 hover:bg-neutral-300">
-                <Download className="mr-2 w-4 h-4" /> Print / Save as PDF
-              </Button>
-            </div>
-
             <div id="report-markdown" className="p-8 bg-white rounded-2xl shadow-md">
               <ReactMarkdown
                 components={{
@@ -137,7 +158,7 @@ export default function InterviewPrep() {
                     if (match && match[1] === 'mermaid') {
                       return (
                         <div className="flex justify-center overflow-x-auto">
-                          <MermaidComponent>{String(children).trim()}</MermaidComponent>
+                          <MermaidComponent key={String(children).trim()}>{String(children).trim()}</MermaidComponent>
                         </div>
                       );
                     }
@@ -164,21 +185,38 @@ export default function InterviewPrep() {
           </>
         )}
 
-        {!report && !loading && (
+        {(hasChangedSinceReport || (!report && !loading)) && (
           <div className="flex justify-end no-print">
-            <Button onClick={handleSubmit} className="bg-black hover:bg-neutral-900 text-white px-6 py-2 shadow-lg">
+            <Button
+              onClick={handleSubmit}
+              disabled={desc.trim().length < 50}
+              className={`px-6 py-2 font-semibold rounded-xl text-base shadow-lg transition-all duration-300 ${
+                desc.trim().length < 50
+                  ? "bg-gray-300 text-white cursor-not-allowed"
+                  : "bg-black hover:bg-neutral-900 text-white"
+              }`}
+            >
               Generate Prep Report
             </Button>
           </div>
         )}
 
         {showTop && (
-          <button
-            onClick={handleScrollTop}
-            className="fixed bottom-6 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-neutral-900 no-print"
-          >
-            <ArrowUp className="w-5 h-5" />
-          </button>
+          <>
+            <button
+              onClick={handlePrint}
+              className="fixed bottom-20 right-6 z-50 p-3 bg-white text-black rounded-full shadow-lg hover:bg-gray-100 border border-gray-300 no-print"
+            >
+              <Printer className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={handleScrollTop}
+              className="fixed bottom-6 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-neutral-900 no-print"
+            >
+              <ArrowUp className="w-5 h-5" />
+            </button>
+          </>
         )}
       </div>
     </div>

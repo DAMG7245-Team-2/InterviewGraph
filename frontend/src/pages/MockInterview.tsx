@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Keyboard, Mic, Square, Volume2, Contact } from "lucide-react";
+import { Keyboard, Mic, Square, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -256,9 +256,18 @@ export default function MockInterview() {
   return (
     <div className="animated-gradient min-h-screen text-gray-800 flex flex-col items-center justify-start p-10">
       <div className="max-w-5xl w-full space-y-8">
+  <div className="flex justify-start">
+    <Button
+      onClick={() => navigate("/")}
+      variant="ghost"
+      className="text-sm text-gray-600 hover:text-black flex items-center gap-2"
+    >
+      ← Back to Home
+    </Button>
+  </div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 text-gray-700">
-            <Contact className="w-7 h-7 text-green" />
+            <Mic className="w-7 h-7 text-green" />
             <h1 className="text-4xl font-semibold">Mock Interview</h1>
           </div>
           <div className="text-lg font-medium text-gray-600">⏱️ {formatTime(elapsedTime)}</div>
