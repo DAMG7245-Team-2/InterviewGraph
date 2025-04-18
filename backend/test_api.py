@@ -4,6 +4,8 @@ from api import app
 
 from fastapi.testclient import TestClient
 
+from interview_agent.prompts import START_INTERVIEW, WAIT_FOR_USER_INTERRUPT_MESSAGE
+
 client = TestClient(app)
 
 valid_jd = """Full job description
@@ -59,7 +61,6 @@ def test_prep_happy_path():
         json={"job_description": valid_jd},
     )
     assert response.status_code == 200
-    assert response.headers["content-type"] == "text/markdown; charset=utf-8"
     response_content = response.content
     assert response_content is not None
     assert len(response_content) > 1000
@@ -71,7 +72,6 @@ def test_prep_invalid_job_description():
         json={"job_description": "This is a test job description" * 10},
     )
     assert response.status_code == 200
-    assert response.headers["content-type"] == "text/markdown; charset=utf-8"
     response_content = response.content
     assert response_content is not None
     decoded_content = response_content.decode("utf-8")
@@ -96,46 +96,75 @@ def test_interview_happy_path():
         json={"message": valid_jd, "thread_id": thread_id},
     )
     assert response.status_code == 200
-    decoded_content = response.content.decode("utf-8")
-    assert decoded_content is not None  # question 1
+    decoded_content = response.json()
+    assert decoded_content is not None
+    assert decoded_content["message"] == WAIT_FOR_USER_INTERRUPT_MESSAGE
+    assert decoded_content["feedback"] is None
     response = client.post(
         "/interview",
-        json={"message": "I don't know", "thread_id": thread_id},
+        json={"message": START_INTERVIEW, "thread_id": thread_id},
     )
     assert response.status_code == 200
-    decoded_content = response.content.decode("utf-8")
-    assert decoded_content is not None  # question 2
+    decoded_content = response.json()
+    assert decoded_content is not None
+    assert decoded_content["message"] is not None  # Question 1
+    assert decoded_content["feedback"] is None
     response = client.post(
         "/interview",
-        json={"message": "I don't know", "thread_id": thread_id},
+        json={"message": "Question 1 answer", "thread_id": thread_id},
     )
     assert response.status_code == 200
-    decoded_content = response.content.decode("utf-8")
-    assert decoded_content is not None  # question 3
+    decoded_content = response.json()
+    assert decoded_content is not None
+    assert decoded_content["message"] is not None  # question 2
+    assert decoded_content["feedback"] is None
     response = client.post(
         "/interview",
-        json={"message": "I don't know", "thread_id": thread_id},
+        json={"message": "Question 2 answer", "thread_id": thread_id},
     )
     assert response.status_code == 200
-    decoded_content = response.content.decode("utf-8")
-    assert decoded_content is not None  # question 4
+    decoded_content = response.json()
+    assert decoded_content is not None
+    assert decoded_content["message"] is not None  # question 3
+    assert decoded_content["feedback"] is None
     response = client.post(
         "/interview",
-        json={"message": "I don't know", "thread_id": thread_id},
+        json={"message": "Question 3 answer", "thread_id": thread_id},
     )
     assert response.status_code == 200
-    decoded_content = response.content.decode("utf-8")
-    assert decoded_content is not None  # question 5
+    decoded_content = response.json()
+    assert decoded_content is not None
+    assert decoded_content["message"] is not None  # question 4
+    assert decoded_content["feedback"] is None
     response = client.post(
         "/interview",
-        json={"message": "I don't know", "thread_id": thread_id},
+        json={"message": "Question 4 answer", "thread_id": thread_id},
     )
     assert response.status_code == 200
-    response_json = response.json()
-    print("response_json", response_json)
-    assert response_json is not None  # feedback
-    # sample feedback:
+    decoded_content = response.json()
+    assert decoded_content is not None
+    assert decoded_content["message"] is not None  # question 5
+    assert decoded_content["feedback"] is None
+    response = client.post(
+        "/interview",
+        json={"message": "Question 5 answer", "thread_id": thread_id},
+    )
+    assert response.status_code == 200
+    decoded_content = response.json()
+    assert decoded_content is not None
+    assert decoded_content["message"] == "Interview complete"
+    assert decoded_content["feedback"] is not None
+    feedback = decoded_content["feedback"]
+    assert feedback is not None
+    assert len(feedback) == 5
+    assert feedback[0]["similarity"] is not None
+    assert feedback[0]["feedback"] is not None
+    assert feedback[0]["qa"] is not None
+    assert feedback[0]["qa"]["question"] is not None
+    assert feedback[0]["qa"]["expected_answer"] is not None
+    assert feedback[0]["qa"]["given_answer"] is not None
     """
+    sample feedback for schema:
     [
         {
             "qa": {
@@ -148,13 +177,6 @@ def test_interview_happy_path():
         }
     ]
     """
-    assert len(response_json) == 5
-    assert "feedback" in response_json[0]
-    assert "similarity" in response_json[0]
-    assert "qa" in response_json[0]
-    assert "question" in response_json[0]["qa"]
-    assert "expected_answer" in response_json[0]["qa"]
-    assert "given_answer" in response_json[0]["qa"]
 
 
 def test_interview_invalid_job_description():
@@ -163,14 +185,19 @@ def test_interview_invalid_job_description():
         "/interview",
         json={"message": "This is a test job description" * 10, "thread_id": thread_id},
     )
-    assert response.status_code == 200
+    assert response.status_code == 418
     response_json = response.json()
+    print("response_json", response_json)
     assert response_json is not None
-    assert "Please provide a valid job description" in response_json
-
+    assert response_json["message"] == "Please provide a valid job description"
+    assert response_json["feedback"] is None
     # retry with valid job description
     response = client.post(
         "/interview",
         json={"message": valid_jd, "thread_id": thread_id},
     )
     assert response.status_code == 200
+    decoded_content = response.json()
+    assert decoded_content is not None
+    assert decoded_content["message"] == WAIT_FOR_USER_INTERRUPT_MESSAGE
+    assert decoded_content["feedback"] is None

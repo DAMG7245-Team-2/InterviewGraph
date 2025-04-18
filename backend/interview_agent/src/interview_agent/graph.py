@@ -17,7 +17,12 @@ from interview_agent.util import (
     AvailableCategories,
     AvailableDifficulties,
 )
-from interview_agent.prompts import quizzer_prompt, feedback_prompt
+from interview_agent.prompts import (
+    START_INTERVIEW,
+    WAIT_FOR_USER_INTERRUPT_MESSAGE,
+    quizzer_prompt,
+    feedback_prompt,
+)
 from interview_agent.configuration import Configuration
 from prep_agent.state import JobDescriptionValidation
 
@@ -100,6 +105,17 @@ async def generate_question(state: State, config: RunnableConfig):
     return {"qa_list": generated_qa_list}
 
 
+async def wait_for_user_input(
+    state: State, config: RunnableConfig
+) -> Command[Literal["human_node", "wait_for_user_input_node"]]:
+    """Wait for the user to start the interview."""
+    user_input = interrupt(WAIT_FOR_USER_INTERRUPT_MESSAGE)
+    if user_input == START_INTERVIEW:
+        return Command(goto="human_node")
+    else:
+        return Command(goto="wait_for_user_input_node")
+
+
 async def human_node(state: State, config: RunnableConfig):
     """Human node to get the answer from the user."""
 
@@ -146,12 +162,13 @@ poc_workflow = StateGraph(State, input=InputState, config_schema=Configuration)
 poc_workflow.add_node("collect_jd_node", collect_job_description)
 poc_workflow.add_node("validate_job_description_node", is_valid_job_description)
 poc_workflow.add_node("generate_question_node", generate_question)
+poc_workflow.add_node("wait_for_user_input_node", wait_for_user_input)
 poc_workflow.add_node("human_node", human_node)
 poc_workflow.add_node("feedback_node", generate_feedback)
 
 poc_workflow.add_edge(START, "validate_job_description_node")
 poc_workflow.add_edge("collect_jd_node", "validate_job_description_node")
-poc_workflow.add_edge("generate_question_node", "human_node")
+poc_workflow.add_edge("generate_question_node", "wait_for_user_input_node")
 poc_workflow.add_conditional_edges("human_node", route)
 poc_workflow.add_edge("feedback_node", END)
 
