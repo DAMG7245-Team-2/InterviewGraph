@@ -63,7 +63,7 @@ def remove_duplicate_questions(
     duplicate_rows.to_csv(duplicate_output_path, index=False)
 
     # Report summary
-    print(f" Deduplication complete.")
+    print(" Deduplication complete.")
     print(f" Original rows: {len(df)}")
     print(f" Deduplicated rows: {len(deduped_df)}")
     print(f" Duplicate rows saved to: {duplicate_output_path}")

@@ -24,9 +24,12 @@ flowchart TD
   end
  subgraph s2["Interview Agent"]
         __interview_start__(["<p>__start__</p>"])
-        generate_interview_question("generate_interview_question")
+        collect_jd_node("collect_jd_node")
+        validate_job_description_node("validate_job_description_node")
+        generate_question_node("generate_question_node")
+        wait_for_user_input_node("wait_for_user_input_node")
         human_node("human_node")
-        generate_feedback("generate_feedback")
+        feedback_node("feedback_node")
         __interview_end__(["<p>__end__</p>"])
   end
  subgraph s3["Langgraph"]
@@ -34,17 +37,20 @@ flowchart TD
         s2
   end
  subgraph s4["FastApi"]
-        n1["MCP"]
+        n1["MCP Server"]
         n2["Langgraph"]
   end
  subgraph s5["Airflow"]
         n9["Unstructured"]
         n10["Structured"]
   end
-    __interview_start__ --> generate_interview_question
-    generate_feedback --> __interview_end__
-    generate_interview_question --> human_node
-    human_node --> generate_feedback
+    __interview_start__ --> validate_job_description_node
+    collect_jd_node --> validate_job_description_node
+    feedback_node --> __interview_end__
+    generate_question_node --> wait_for_user_input_node
+    human_node -.-> feedback_node & human_node
+    validate_job_description_node -.-> generate_question_node & collect_jd_node
+    wait_for_user_input_node -.-> human_node & wait_for_user_input_node
     __start__ --> is_valid_job_description
     compile_final_report --> __end__
     generate_sections___end__ --> collect_sections
@@ -56,23 +62,24 @@ flowchart TD
     generate_sections_search_web_rag --> generate_sections_write_and_grade_section
     generate_sections_section_generate_query --> generate_sections_search_web_rag
     generate_sections_write_and_grade_section -.-> generate_sections___end__ & generate_sections_search_web_rag
-    n2 <--> s3 & n1
-    n1 <--> n3["Snowflake tool"] & n4["Pinecone tool"]
-    n5["Frontend"] <--> s4
-    n7["SnowflakeDB"] <--> n3
-    n4 --> n8["Pinecone"]
-    n9 --> n8
+    n2 o--o s3
+    n2 <--> n1
+    n7["SnowflakeDB"] <--> n3["Snowflake tool"]
     n10 --> n7
+    n9 --> n7 & n11["Pinecone"]
+    n11 <--> n12["RAG tool"]
+    n12 --> n2
+    n3 --> n1
+    s4 --> n5["Frontend"]
     n2@{ shape: rect}
     n10@{ shape: rect}
-    n3@{ shape: rect}
-    n4@{ shape: rect}
-    n5@{ shape: rect}
     n7@{ shape: rounded}
-    n8@{ shape: rounded}
+    n3@{ shape: rect}
+    n5@{ shape: rect}
      __start__:::first
      __end__:::last
      __interview_start__:::first
+     __interview_end__:::last
      __interview_end__:::last
     classDef default fill:#f2f0ff,line-height:1.2,fill:#f2f0ff,line-height:1.2
     classDef first fill-opacity:0,fill-opacity:0

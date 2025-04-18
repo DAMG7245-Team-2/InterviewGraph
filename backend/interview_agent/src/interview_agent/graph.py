@@ -1,26 +1,29 @@
-import os
 from typing import Literal
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
+from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import interrupt, Command
 from langchain.chat_models import init_chat_model
-from sqlalchemy import create_engine
 from dotenv import load_dotenv
-from snowflake.sqlalchemy import URL
+from langgraph.prebuilt import create_react_agent
+from langchain_mcp_adapters.tools import load_mcp_tools
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
 
-from interview_agent.state import State, InputState, QAList, Feedback
-from interview_agent.util import (
-    aget_randomized_interview_questions,
-    AvailableCategories,
-    AvailableDifficulties,
+from interview_agent.state import (
+    QA,
+    SQLTOOL_ARGS_SCHEMA,
+    QList,
+    State,
+    InputState,
+    Feedback,
 )
 from interview_agent.prompts import (
     START_INTERVIEW,
     WAIT_FOR_USER_INTERRUPT_MESSAGE,
-    quizzer_prompt,
     feedback_prompt,
 )
 from interview_agent.configuration import Configuration
@@ -60,49 +63,49 @@ async def is_valid_job_description(
 
 
 async def generate_question(state: State, config: RunnableConfig):
-    """Generate a question based on the context provided."""
-    # Initialize the chat model
-    myconfig = Configuration.from_runnable_config(config)
-    num_questions = myconfig.number_of_questions
-    quizzer_provider = myconfig.quizzer_provider
-    quizzer_model = myconfig.quizzer_model
+    """Analyze the job description and return a list of questions."""
+    server_params = StdioServerParameters(
+        command="python",
+        # Make sure to update to the full absolute path to your math_server.py file
+        args=[
+            "/Users/ashishnevan/Documents/NEU/INFO7245/Assignments/InterviewGraph/backend/sql_mcp.py"
+        ],
+    )
+    model = ChatOpenAI(model="gpt-4o-mini")
+    num_questions = 5
 
-    chat_model = init_chat_model(model_provider=quizzer_provider, model=quizzer_model)
-    chat_model_with_structured_output = chat_model.with_structured_output(QAList)
-    engine = create_engine(
-        URL(
-            account=os.getenv("SNOWFLAKE_ACCOUNT"),
-            user=os.getenv("SNOWFLAKE_USER"),
-            password=os.getenv("SNOWFLAKE_PASSWORD"),
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            role=os.getenv("SNOWFLAKE_ROLE"),
-        )
-    )
-    context = await aget_randomized_interview_questions(
-        engine,
-        AvailableCategories.ALGORITHMS,
-        AvailableDifficulties.HARD,
-        num_questions,
-    )
+    def generate_question_message(job_description: str, num_questions: int):
+        return f"You are an interviewer. You will be crafting questions for a phone interview using the tool 'sql_tool'. The tool is a database of interview questions and answers. Generate a list of {num_questions} possible interview questions based on the job description provided. \n Job Description: {job_description}"
 
-    system_message = SystemMessage(
-        content=quizzer_prompt.format(
-            num_questions=num_questions,
-            context=context,
-        )
-    )
-    human_message = HumanMessage(
-        content="Please generate a question based on the provided context."
-    )
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            # Initialize the connection
+            await session.initialize()
 
-    # Send the messages to the chat model and get the response
-    response = await chat_model_with_structured_output.ainvoke(
-        [system_message, human_message]
-    )
-    generated_qa_list = response.qa_list
-    return {"qa_list": generated_qa_list}
+            # Get tools
+            tools = await load_mcp_tools(session)
+
+            tools[0].args_schema = SQLTOOL_ARGS_SCHEMA
+
+            # Create and run the agent
+            agent = create_react_agent(model, tools, response_format=QList)
+            agent_response = await agent.ainvoke(
+                {
+                    "messages": generate_question_message(
+                        state["job_description"], num_questions
+                    )
+                }
+            )
+            state["qa_list"] = []
+            for qa in agent_response["structured_response"].q_list:
+                state["qa_list"].append(
+                    QA(
+                        question=qa.question,
+                        expected_answer=qa.answer,
+                        given_answer="",
+                    )
+                )
+            return {"qa_list": state["qa_list"]}
 
 
 async def wait_for_user_input(
