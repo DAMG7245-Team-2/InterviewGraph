@@ -104,3 +104,8 @@ InterviewGraph/
 ├── pyproject.toml            # Project dependencies
 └── README.md                 # This file
 ```
+## Team Contribution Declaration
+WE ATTEST THAT WE HAVEN'T USED ANY OTHER STUDENTS' WORK IN OUR ASSIGNMENT AND ABIDE BY THE POLICIES LISTED IN THE STUDENT HANDBOOK
+- Ashish Nevan: 33.3%
+- Neha Devarapalli: 33.3%
+- Adwaith Korapati: 33.3%
