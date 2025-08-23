@@ -36,13 +36,13 @@ class Configuration:
 
     report_structure: str = MY_REPORT_STRUCTURE
     planner_provider: str = "openai"
-    planner_model: str = "gpt-4o-mini"
+    planner_model: str = "o3-mini"
     writer_provider: str = "openai"
-    writer_model: str = "gpt-4o-mini"
+    writer_model: str = "gpt-4.1-nano"
     search_api: str = "tavily"
     number_of_queries: int = 5
-    top_k: int = 5  # pinecone top k results
-    score_threshold: float = 0.4
+    top_k: int = 2  # pinecone top k results
+    score_threshold: float = 0.7
     max_search_depth: int = 2
 
     @classmethod

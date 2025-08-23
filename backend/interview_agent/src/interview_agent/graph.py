@@ -28,6 +28,7 @@ from interview_agent.prompts import (
     feedback_prompt,
 )
 from interview_agent.configuration import Configuration
+from prep_agent.prompts import JOB_DESCRIPTION_VALIDATION_SYSTEM_INSTRUCTIONS
 from prep_agent.state import JobDescriptionValidation
 
 load_dotenv()
@@ -50,7 +51,7 @@ async def is_valid_job_description(
         model_provider=quizzer_provider, model=quizzer_model
     )
     structured_llm = validator_model.with_structured_output(JobDescriptionValidation)
-    system_instructions = "You are a job description validator. You will be given a text and you will need to validate if it is a valid job description. If the job description is not valid, you will return 'invalid'. If the job description is valid, you will return 'valid'."
+    system_instructions = JOB_DESCRIPTION_VALIDATION_SYSTEM_INSTRUCTIONS
     messages = [
         SystemMessage(content=system_instructions),
         HumanMessage(content=job_description),

@@ -281,3 +281,19 @@ If section name contains "Conclusion/Summary":
 conclusion_section_quality_checks = """
 - For conclusion: 100-150 word limit, ## for section title, only ONE structural element at most, no sources section
 """
+
+JOB_DESCRIPTION_VALIDATION_SYSTEM_INSTRUCTIONS = """
+You are an expert technical writer, your task is to validate a job description.
+
+<Validation criteria>
+- The job description contains the job title
+- The job description contains the required skills / qualifications
+- The job description must be related to the job title
+- The job role must be related to STEM fields
+</Validation criteria>
+
+<Task>
+Validate the job description and output with the following schema:
+"valid" if the job description is valid, "invalid" if the job description is invalid
+</Task>
+"""

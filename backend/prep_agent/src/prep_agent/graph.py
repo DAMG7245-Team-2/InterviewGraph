@@ -25,6 +25,7 @@ from prep_agent.state import (
     Feedback,
 )
 from prep_agent.prompts import (
+    JOB_DESCRIPTION_VALIDATION_SYSTEM_INSTRUCTIONS,
     report_planner_query_writer_instructions,
     report_planner_instructions,
     query_writer_instructions,
@@ -57,7 +58,7 @@ async def is_valid_job_description(
         model_provider=writer_provider, model=writer_model_name
     )
     structured_llm = writer_model.with_structured_output(JobDescriptionValidation)
-    system_instructions = "You are a job description validator. You will be given a text and you will need to validate if it is a valid job description. If the job description is not valid, you will return 'invalid'. If the job description is valid, you will return 'valid'."
+    system_instructions = JOB_DESCRIPTION_VALIDATION_SYSTEM_INSTRUCTIONS
     messages = [
         SystemMessage(content=system_instructions),
         HumanMessage(content=job_description),
@@ -225,11 +226,10 @@ async def search_web(state: SectionState, config: RunnableConfig):
 
     # Get configuration
     my_config = Configuration.from_runnable_config(config)
-    max_search_depth = my_config.max_search_depth
     top_k = my_config.top_k
     score_threshold = my_config.score_threshold
     # Perform search
-    source_str = await async_search(query_list, max_search_depth)
+    source_str = await async_search(query_list, top_k)
     pinecone = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
     index = pinecone.IndexAsyncio(host=os.getenv("PINECONE_HOST", ""))
     embeddings = HuggingFaceEmbeddings(
