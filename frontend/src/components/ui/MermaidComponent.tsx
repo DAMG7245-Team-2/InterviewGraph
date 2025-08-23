@@ -4,6 +4,7 @@ import mermaid from 'mermaid';
 const MermaidComponent = ({ children }: { children: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [renderFailed, setRenderFailed] = useState(false);
 
   useEffect(() => {
     mermaid.initialize({
@@ -42,20 +43,19 @@ const MermaidComponent = ({ children }: { children: string }) => {
           if (containerRef.current) {
             containerRef.current.innerHTML = svg;
             if (bindFunctions) bindFunctions(containerRef.current);
+            setRenderFailed(false);
           }
         })
         .catch((error) => {
           console.error('Mermaid render error:', error);
-          if (containerRef.current) {
-            containerRef.current.innerHTML = '<p style="color: red">⚠️ Failed to render diagram.</p>';
-          }
+          setRenderFailed(true);
         });
     }
   }, [children]);
 
-  const handleZoomToggle = () => {
-    setIsZoomed(!isZoomed);
-  };
+  const handleZoomToggle = () => setIsZoomed(!isZoomed);
+
+  if (renderFailed) return null; // ✅ Skip rendering on error
 
   return (
     <div
